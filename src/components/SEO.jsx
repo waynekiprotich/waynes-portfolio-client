@@ -9,10 +9,11 @@ export default function SEO({
   image = `${SITE.url}/og-image.png`,
   schema,
 }) {
-  const defaultTitle = `${SITE.name} | ${SITE.role}`
-  const defaultDesc = `${SITE.name} is a full-stack software engineer in ${SITE.location}, building modern web applications for real-world use.`
+  // Keep in sync with the static <title> and description in index.html.
+  const defaultTitle = `${SITE.name} | Software Engineer & Web Developer in ${SITE.location}`
+  const defaultDesc = `Software engineer and web developer in ${SITE.location}. I build fast websites, web applications and M-Pesa e-commerce stores for businesses across Kenya.`
 
-  const metaTitle = title ? `${title} — ${SITE.name}` : defaultTitle
+  const metaTitle = title ? `${title} | ${SITE.name}` : defaultTitle
   const metaDesc = description || defaultDesc
   const fullUrl = `${SITE.url}${path}`
 

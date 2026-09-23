@@ -1,30 +1,35 @@
-import { lazy, Suspense } from 'react'
+import { Suspense } from 'react'
 import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter, Routes, Route } from '@/lib/router'
 import { ThemeProvider } from '@/theme/ThemeProvider'
 import RootLayout from '@/layouts/RootLayout'
 import RouteFallback from '@/components/RouteFallback'
 import Home from '@/pages/Home'
-
 // Home is imported eagerly, not lazily: it is the landing route, so splitting
 // it only buys a second network round trip before anything can paint — the
 // bundle has to load, then ask for the chunk, then render. Every other route
 // is one a visitor navigates *to*, by which point the fetch is free.
-const Work = lazy(() => import('@/pages/Work'))
-const CaseStudy = lazy(() => import('@/pages/CaseStudy'))
-const About = lazy(() => import('@/pages/About'))
-const Services = lazy(() => import('@/pages/Services'))
-const Estimator = lazy(() => import('@/pages/Estimator'))
-const Journal = lazy(() => import('@/pages/Journal'))
-const CV = lazy(() => import('@/pages/CV'))
-const Contact = lazy(() => import('@/pages/Contact'))
-const NotFound = lazy(() => import('@/pages/NotFound'))
+import {
+  Work,
+  CaseStudy,
+  About,
+  Services,
+  Estimator,
+  Journal,
+  CV,
+  Contact,
+  NotFound,
+} from '@/lib/pages'
 
-export default function App() {
+/**
+ * `url` and `helmetContext` are only passed by the build-time prerender
+ * (src/entry-server.jsx); in the browser the router reads window.location.
+ */
+export default function App({ url, helmetContext }) {
   return (
-    <HelmetProvider>
+    <HelmetProvider context={helmetContext}>
       <ThemeProvider>
-        <BrowserRouter>
+        <BrowserRouter url={url}>
           <RootLayout>
             <Suspense fallback={<RouteFallback />}>
               <Routes>

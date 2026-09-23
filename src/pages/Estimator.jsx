@@ -53,7 +53,7 @@ export default function Estimator() {
   const mailto = useMemo(() => {
     const body = summary.map(([label, value]) => `${label}: ${value}`).join('\n')
     return `mailto:${SITE.email}?subject=${encodeURIComponent(
-      'Project enquiry — ' + (data.contact.fullName || 'New enquiry')
+      'Project enquiry: ' + (data.contact.fullName || 'New enquiry')
     )}&body=${encodeURIComponent(body)}`
   }, [summary, data.contact.fullName])
 
@@ -94,8 +94,8 @@ export default function Estimator() {
   return (
     <>
       <SEO
-        title="Estimator"
-        description="Outline a project brief — type, timeline and budget — and send it straight through."
+        title="Website Project Estimator"
+        description="Scope a website or web app project in Kenya: project type, timeline and budget in KES, sent straight to Wayne Kiprotich."
         path="/estimator"
       />
 

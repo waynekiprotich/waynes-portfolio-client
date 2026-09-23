@@ -102,7 +102,7 @@ export default function ProjectRow({ project, index = 0, priority = false }) {
         >
           <ProjectImage
             src={previewImage}
-            alt={`${title} — ${category} interface`}
+            alt={`${title}, ${category} interface`}
             title={title}
             priority={priority}
           />

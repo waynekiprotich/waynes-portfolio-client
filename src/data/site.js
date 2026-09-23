@@ -33,22 +33,22 @@ export const SERVICES = [
     number: '01',
     title: 'Custom Website Development',
     description:
-      'Tailored websites built from scratch to match your brand and business goals — no templates, no shortcuts.',
+      'Tailored websites built from scratch to match your brand and business goals: no templates, no shortcuts.',
     tags: ['React', 'Vite', 'Tailwind'],
   },
   {
     number: '02',
     title: 'Full-Stack Applications',
     description:
-      'End-to-end applications — from database design to deployment — built to scale with your business.',
+      'End-to-end applications, from database design to deployment, built to scale with your business.',
     tags: ['React', 'Flask', 'PostgreSQL'],
   },
   {
     number: '03',
     title: 'E-commerce',
     description:
-      'Online stores with secure checkout, product management, and payment integrations that convert visitors into customers.',
-    tags: ['Payments', 'Catalog', 'Checkout'],
+      'Online stores with secure checkout, product management, and M-Pesa and card payments that convert visitors into customers.',
+    tags: ['M-Pesa', 'Catalog', 'Checkout'],
   },
   {
     number: '04',
@@ -84,7 +84,7 @@ export const PROCESS = [
   { number: '01', title: 'Discovery', description: 'Understand the problem, the users and the constraints before any code exists.' },
   { number: '02', title: 'Planning', description: 'Scope, data model and milestones agreed up front so the build has a shape.' },
   { number: '03', title: 'Design', description: 'Interface and interaction decisions made deliberately, not assembled from defaults.' },
-  { number: '04', title: 'Development', description: 'Built in vertical slices — each one shippable, reviewable and demonstrable.' },
+  { number: '04', title: 'Development', description: 'Built in vertical slices, each one shippable, reviewable and demonstrable.' },
   { number: '05', title: 'Testing', description: 'Correctness under load and edge cases, checked against real devices and real data.' },
   { number: '06', title: 'Deployment', description: 'Pipelines, environment configuration and a release that is repeatable.' },
   { number: '07', title: 'Support', description: 'Monitoring, fixes and iteration after launch, when the real usage starts.' },

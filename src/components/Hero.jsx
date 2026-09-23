@@ -59,8 +59,8 @@ export default function Hero() {
       if (frame) return
       frame = requestAnimationFrame(() => {
         frame = 0
-        el.style.setProperty('--dx', `${(e.clientX / window.innerWidth - 0.5) * 46}px`)
-        el.style.setProperty('--dy', `${(e.clientY / window.innerHeight - 0.5) * 46}px`)
+        el.style.setProperty('--dx', `${(e.clientX / window.innerWidth - 0.5) * 120}px`)
+        el.style.setProperty('--dy', `${(e.clientY / window.innerHeight - 0.5) * 120}px`)
       })
     }
 
@@ -87,12 +87,12 @@ export default function Hero() {
         ref={wash}
         aria-hidden="true"
         className="pointer-events-none absolute -top-[22%] left-1/2 h-[85vmax] w-[85vmax]
-                   -translate-x-1/2 rounded-full opacity-80 blur-[120px]"
+                   -translate-x-1/2 rounded-full opacity-90 blur-[110px]"
         style={{
           background:
-            'radial-gradient(closest-side, rgb(var(--c-sky) / 0.28), rgb(var(--c-sand) / 0.55) 48%, transparent 72%)',
+            'radial-gradient(closest-side, rgb(var(--c-sky) / 0.42), rgb(var(--c-sand) / 0.65) 48%, transparent 72%)',
           transform: 'translate3d(calc(-50% + var(--dx, 0px)), var(--dy, 0px), 0)',
-          transition: 'transform 700ms cubic-bezier(0.22,1,0.36,1)',
+          transition: 'transform 350ms cubic-bezier(0.22,1,0.36,1)',
         }}
       />
 
@@ -110,7 +110,7 @@ export default function Hero() {
 
       <div className="shell-inner relative">
         <p className="eyebrow" data-intro-fade style={{ animationDelay: '0.18s' }}>
-          {SITE.location} — Available for work
+          {SITE.location}, Available for work
         </p>
 
         <h1 className="mt-6 text-display">
@@ -138,7 +138,7 @@ export default function Hero() {
           </p>
 
           <p className="text-[14px] leading-relaxed text-muted" data-intro-fade style={{ animationDelay: '0.30s' }}>
-            I design and ship modern web applications end to end — the data model, the API and
+            I design and ship modern web applications end to end: the data model, the API and
             the interface people actually touch.
           </p>
 

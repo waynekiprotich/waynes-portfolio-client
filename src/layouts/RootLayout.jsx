@@ -11,8 +11,11 @@ import { ScrollTrigger } from '@/lib/motion'
 
 export default function RootLayout({ children }) {
   const { pathname } = useLocation()
+  // No window means the build-time prerender: leave the shutter out of the
+  // static HTML so crawlers and first paint get the page, not a cover. (Newer
+  // Node versions define sessionStorage, so it is not a reliable signal.)
   const [revealed, setRevealed] = useState(
-    () => typeof sessionStorage !== 'undefined' && sessionStorage.getItem('wk:intro') === 'seen'
+    () => typeof window === 'undefined' || sessionStorage.getItem('wk:intro') === 'seen'
   )
 
   useLenis()

@@ -15,7 +15,7 @@ export default function ProjectCard({ project, priority = false, index }) {
         <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-line bg-sand">
           <ProjectImage
             src={previewImage}
-            alt={`${title} — ${category} interface`}
+            alt={`${title}, ${category} interface`}
             title={title}
             priority={priority}
             sizes="(max-width: 640px) 92vw, (max-width: 1024px) 46vw, 30vw"

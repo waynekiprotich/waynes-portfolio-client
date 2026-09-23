@@ -17,20 +17,14 @@ export default function Contact() {
   return (
     <>
       <SEO
-        title="Contact"
-        description={`Get in touch with ${SITE.name}, ${SITE.role} based in ${SITE.location}.`}
+        title="Contact a Web Developer in Nairobi"
+        description={`Hire ${SITE.name}, a software engineer and web developer in ${SITE.location}. Get in touch to scope a website, web app or online store.`}
         path="/contact"
         schema={{
           '@context': 'https://schema.org',
           '@type': 'ContactPage',
-          mainEntity: {
-            '@type': 'Person',
-            name: SITE.name,
-            jobTitle: SITE.role,
-            email: SITE.email,
-            telephone: SITE.phone,
-            url: `${SITE.url}/contact`,
-          },
+          // The Person itself is defined once, in index.html.
+          mainEntity: { '@id': `${SITE.url}/#person` },
         }}
       />
 

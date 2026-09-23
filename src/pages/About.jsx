@@ -12,7 +12,7 @@ const PRINCIPLES = [
   },
   {
     title: 'Performance as a feature',
-    body: 'Measured, not assumed — payload size, render path and interaction latency checked before and after a change.',
+    body: 'Measured, not assumed: payload size, render path and interaction latency checked before and after a change.',
   },
   {
     title: 'Clean architecture',
@@ -31,24 +31,20 @@ export default function About() {
     <>
       <SEO
         title="About"
-        description={`${SITE.name} is a full-stack software engineer in ${SITE.location} building modern web applications end to end.`}
+        description={`${SITE.name} is a software engineer and web developer in ${SITE.location}, building websites and web applications end to end for clients and his own products.`}
         path="/about"
         schema={{
           '@context': 'https://schema.org',
           '@type': 'ProfilePage',
-          mainEntity: {
-            '@type': 'Person',
-            name: SITE.name,
-            jobTitle: SITE.role,
-            description: `Full-stack engineer based in ${SITE.location}, working independently with clients and on his own products.`,
-          },
+          // The Person itself is defined once, in index.html.
+          mainEntity: { '@id': `${SITE.url}/#person` },
         }}
       />
 
       <PageHeader
         eyebrow="About"
         title="Wayne Kiprotich"
-        lede="A full-stack software engineer in Nairobi, working independently with clients and on my own products. I move between frontend and backend without much ceremony — designing the data model one hour, tuning a transition the next."
+        lede="A full-stack software engineer in Nairobi, working independently with clients and on my own products. I move between frontend and backend without much ceremony, designing the data model one hour, tuning a transition the next."
       />
 
       <section ref={scope} className="shell py-16 sm:py-20" aria-label="Profile">
@@ -79,8 +75,8 @@ export default function About() {
 
           <div>
             <p className="max-w-[62ch] text-[15px] leading-relaxed text-muted" data-reveal>
-              I build production web applications — dashboards, platforms and full-stack
-              products — for clients and for myself. That means the schema and the migration
+              I build production web applications, dashboards, platforms and full-stack
+              products, for clients and for myself. That means the schema and the migration
               as often as the layout and the animation, and it means being responsible for
               the thing after it ships rather than only up to launch.
             </p>

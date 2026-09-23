@@ -59,7 +59,7 @@ export default function CaseStudy() {
               <p className="mt-6 inline-flex items-center gap-2 rounded-pill border border-line
                             bg-ivory px-4 py-2 text-[12px] text-muted">
                 <span className="h-1.5 w-1.5 rounded-full bg-sky" aria-hidden="true" />
-                Write-up in progress — some sections are still draft copy.
+                Write-up in progress: some sections are still draft copy.
               </p>
             )}
 

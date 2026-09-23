@@ -25,8 +25,14 @@ const readLocation = () => ({
   hash: window.location.hash,
 })
 
-export function BrowserRouter({ children }) {
-  const [location, setLocation] = useState(readLocation)
+const parseUrl = (url) => {
+  const { pathname, search, hash } = new URL(url, 'http://prerender.local')
+  return { pathname, search, hash }
+}
+
+/** `url` is for build-time prerendering, where there is no window. */
+export function BrowserRouter({ url, children }) {
+  const [location, setLocation] = useState(() => (url ? parseUrl(url) : readLocation()))
 
   useEffect(() => {
     const onPop = () => setLocation(readLocation())

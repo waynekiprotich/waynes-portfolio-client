@@ -40,7 +40,7 @@ export default function AboutPreview() {
           </h2>
 
           <p className="mt-6 max-w-[54ch] text-lede text-muted" data-reveal>
-            I move between frontend and backend without much ceremony — designing the data
+            I move between frontend and backend without much ceremony, designing the data
             model one hour, tuning a transition the next. I care about systems that are
             simple to reason about and safe to change.
           </p>

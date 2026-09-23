@@ -24,8 +24,8 @@ export default function Work() {
   return (
     <>
       <SEO
-        title="Work"
-        description="Selected projects by Wayne Kiprotich — dashboards, platforms and full-stack applications built for real use."
+        title="Web Development Projects"
+        description="Web development projects by Wayne Kiprotich, a software engineer in Nairobi, Kenya: e-commerce with M-Pesa, dashboards and full-stack applications."
         path="/work"
       />
 
