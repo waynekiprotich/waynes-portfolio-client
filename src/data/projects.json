@@ -25,7 +25,7 @@
     "category": "Dashboard",
     "codeHref": "https://github.com/waynekiprotich/apexgrid-client.git",
     "description": "Formula 1 analytics dashboard with live standings, race telemetry, pit strategies, and session insights.",
-    "featured": false,
+    "featured": true,
     "github": "https://github.com/waynekiprotich/apexgrid-client.git",
     "id": 3,
     "live": "https://apexgrid-client.vercel.app/",
@@ -85,6 +85,10 @@
       "PostgreSQL",
       "M-Pesa"
     ],
+<<<<<<< HEAD
     "title": "The Kingdom Collection"
+=======
+    "title": "Stack-Battle KE"
+>>>>>>> 3c188dd (feat: update portfolio projects)
   }
 ]

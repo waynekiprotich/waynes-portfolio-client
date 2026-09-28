@@ -1,5 +1,6 @@
 export const caseStudies = [
   {
+<<<<<<< HEAD
     id: 5,
     title: "Kenya Quest",
     slug: "kenya-quest",
@@ -41,6 +42,47 @@ export const caseStudies = [
     security: "[PLACEHOLDER] No accounts and no personal data collected.",
     challenges: "[PLACEHOLDER] Keeping a 3D hero, smooth scroll and a map fast on one page.",
     tradeOffs: "[PLACEHOLDER] Local progress instead of accounts: less friction, no cross-device sync.",
+=======
+    id: 1,
+    title: "Stack-Battle KE",
+    slug: "stack-battle-ke",
+    subtitle: "A gamified competitive programming platform for students with real-time challenges.",
+    category: "Education",
+    status: "Production",
+    completionDate: "May 2024",
+    lastUpdated: "June 2024",
+    readingTime: "5 min read",
+    platform: "Web Platform",
+    architectureStyle: "Microservices",
+    overview: "[PLACEHOLDER] Stack-Battle KE is a dynamic platform designed to elevate the competitive programming experience. It pits students against each other in real-time coding battles to foster learning and competition. This case study details the engineering journey of building a real-time execution environment.",
+    heroImage: "/projects/project_1.webp",
+    gallery: ["/projects/project_1.webp"],
+    technologies: ["React", "Flask", "SQLAlchemy", "PostgreSQL"],
+    roles: ["Full Stack Engineer"],
+    duration: "3 Months",
+    team: "2 Engineers",
+    problem: "[PLACEHOLDER] The existing competitive programming landscape often lacks an engaging, gamified element that encourages continuous participation among university students in Kenya.",
+    objectives: [
+      "[PLACEHOLDER] Build a real-time multiplayer coding environment.",
+      "[PLACEHOLDER] Ensure execution environments are secure and isolated."
+    ],
+    research: "[PLACEHOLDER] We analyzed existing platforms like LeetCode and HackerRank.",
+    designProcess: "[PLACEHOLDER] The UI was designed with a dark, code-editor aesthetic to make developers feel at home.",
+    architecture: "[PLACEHOLDER] The application uses a React frontend connected via WebSockets to a Flask backend.",
+    database: "[PLACEHOLDER] PostgreSQL was selected for its robust transactional support.",
+    api: "[PLACEHOLDER] RESTful API combined with a WebSocket layer.",
+    authentication: "[PLACEHOLDER] Secure JWT-based authentication.",
+    features: [
+      "Real-time 1v1 coding battles",
+      "Dynamic Elo rating system",
+      "Secure code execution sandbox"
+    ],
+    performance: "[PLACEHOLDER] Achieved a Lighthouse performance score of 98.",
+    accessibility: "[PLACEHOLDER] Fully keyboard navigable editor layout.",
+    security: "[PLACEHOLDER] Code execution is heavily sandboxed using gVisor and Docker.",
+    challenges: "[PLACEHOLDER] Orchestrating secure, low-latency container spins for code execution was the primary technical hurdle.",
+    tradeOffs: "[PLACEHOLDER] Opted for a slight delay in match startup to ensure complete container isolation.",
+>>>>>>> 3c188dd (feat: update portfolio projects)
     metrics: [],
     timeline: [],
     lessonsLearned: "[PLACEHOLDER] A small, finishable plan beats a long list.",
@@ -51,6 +93,7 @@ export const caseStudies = [
     github: "https://github.com/waynekiprotich/kenya-quest-client",
     liveDemo: "https://kenya-quest-client.waynekip123.workers.dev/",
     documentation: null,
+<<<<<<< HEAD
     relatedProjects: ["kcode", "apexgrid"]
   },
   {
@@ -158,6 +201,9 @@ export const caseStudies = [
     liveDemo: "https://kingdom-client.waynekip123.workers.dev/",
     documentation: null,
     relatedProjects: ["kcode"]
+=======
+    relatedProjects: ["apexgrid"]
+>>>>>>> 3c188dd (feat: update portfolio projects)
   },
   {
     id: 3,
@@ -202,6 +248,10 @@ export const caseStudies = [
     github: "https://github.com/waynekiprotich/apexgrid-client.git",
     liveDemo: "https://apexgrid-client.vercel.app/",
     documentation: null,
+<<<<<<< HEAD
     relatedProjects: ["kcode"]
+=======
+    relatedProjects: ["stack-battle-ke"]
+>>>>>>> 3c188dd (feat: update portfolio projects)
   }
 ];
