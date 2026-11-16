@@ -7,16 +7,20 @@ import { lazy, useState } from 'react'
  * `lazy()` page, it would replace that HTML with the Suspense fallback until
  * the chunk arrived. Preloading the current route first, and rendering the
  * loaded module directly once it exists, swaps the prerendered markup straight
- * for the live page.
+ * for the live page. The router also preloads before each navigation, so view
+ * transitions snapshot the real next page.
  */
 function page(load) {
   let Loaded = null
-  const Lazy = lazy(() =>
-    load().then((mod) => {
+  let pending = null
+  const run = () => {
+    pending ??= load().then((mod) => {
       Loaded = mod.default
       return mod
     })
-  )
+    return pending
+  }
+  const Lazy = lazy(run)
 
   function Page(props) {
     // Chosen once per mount, so a page never switches component type (and
@@ -25,11 +29,7 @@ function page(load) {
     return <Component {...props} />
   }
 
-  Page.preload = () =>
-    load().then((mod) => {
-      Loaded = mod.default
-    })
-
+  Page.preload = run
   return Page
 }
 
@@ -49,13 +49,14 @@ const PRELOADS = [
   [/^\/(work|projects)\/[^/]+\/?$/, CaseStudy],
   [/^\/about\/?$/, About],
   [/^\/services\/?$/, Services],
-  [/^\/estimator\/?$/, Estimator],
+  [/^\/(estimator|scope)\/?$/, Estimator],
   [/^\/(journal|blog)\/?$/, Journal],
   [/^\/cv\/?$/, CV],
   [/^\/contact\/?$/, Contact],
 ]
 
 export function preloadRoute(pathname) {
+  if (pathname === '/' || pathname === '') return Promise.resolve()
   const match = PRELOADS.find(([pattern]) => pattern.test(pathname))
-  return match ? match[1].preload() : Promise.resolve()
+  return (match ? match[1] : NotFound).preload()
 }

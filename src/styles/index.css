@@ -2,273 +2,762 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Fonts are self-hosted, subset to the characters the site uses and
+   preloaded from index.html (see scripts/subset-fonts.mjs). Anybody is a
+   single instance cut from the variable font at 115% width, weight 800. */
+@font-face {
+  font-family: 'Anybody';
+  src: url('/fonts/anybody.woff2') format('woff2');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Instrument Sans';
+  src: url('/fonts/instrument-sans.woff2') format('woff2-variations'),
+    url('/fonts/instrument-sans.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* Metric-tuned local fallbacks, so the swap to the web fonts barely moves
+   anything on a slow connection. */
+@font-face {
+  font-family: 'Instrument Fallback';
+  src: local('Arial'), local('Helvetica Neue'), local('Roboto');
+  size-adjust: 97%;
+  ascent-override: 96%;
+  descent-override: 25%;
+}
+
+@font-face {
+  font-family: 'Anybody Fallback';
+  src: local('Arial Black'), local('Arial'), local('Roboto');
+  size-adjust: 104%;
+  ascent-override: 90%;
+  descent-override: 22%;
+}
+
 @layer base {
   :root {
-    --shell-x: clamp(1rem, 3.5vw, 3.5rem);
+    /* "R G B" triples so Tailwind can apply alpha (bg-night/80 etc.).
+       Contrast on night: chalk 17:1, haze 8:1, faint 5.6:1, gold 9:1. */
+    --night: 10 10 10;      /* #0A0A0A page: near black */
+    --deep: 19 19 19;       /* #131313 raised band */
+    --raised: 29 29 29;     /* #1D1D1D cards, inputs */
+    --chalk: 240 236 226;   /* #F0ECE2 text: warm off-white */
+    --haze: 168 165 158;    /* #A8A59E secondary text: warm grey */
+    --faint: 138 135 128;   /* #8A8780 tertiary text */
+    --amber: 212 175 55;    /* #D4AF37 the one accent: gold (token keeps its old name) */
+    --signal: 189 185 176;  /* #BDB9B0 silver, used inside the 3D scene */
 
-    /* Light palette (default). Every value is an "R G B" triple so Tailwind's
-       rgb(var(--x) / <alpha-value>) pattern can apply opacity modifiers
-       (bg-ivory/85, text-ink/70, …) on top of it. */
-    --c-bone: 239 236 229;   /* page background */
-    --c-ivory: 247 245 241;  /* raised card */
-    --c-sand: 227 220 206;   /* inset / placeholder */
-    --c-ink: 26 25 23;       /* primary text; solid-button background */
-    --c-muted: 96 92 86;     /* secondary text — 5.6:1 on bone, 6.1:1 on ivory */
-    --c-faint: 108 105 99;   /* tertiary text, eyebrows — 4.6:1 / 5.0:1, still AA */
-    --c-sky: 143 196 232;    /* single accent, used sparingly */
-    --c-line-rgb: 26 25 23;  /* hairline borders, tinted from ink */
-    --grain-blend: multiply; /* darkens speckles into a light surface */
-    --grain-opacity: 0.05;
-    /* Floating-dock shadow. Kept as its own token rather than derived from
-       --c-ink: a shadow should stay dark for depth in both themes — using
-       ink's dark-mode value (near-white) here would paint a glow, not a
-       shadow. */
-    --shadow-dock: rgba(26, 25, 23, 0.1);
-    color-scheme: light;
-  }
+    --gutter: clamp(1rem, 4vw, 3.5rem);
+    --header-h: 4.25rem;
 
-  /* Dark mode. Same roles, inverted values — components never carry a
-     `dark:` variant of their own because every color they use is one of
-     these tokens. Resolution order: an explicit user choice (data-theme,
-     set by the inline script in index.html and by useTheme) beats the
-     system preference, which is the fallback for no-JS clients. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme='light']) {
-      --c-bone: 23 22 19;
-      --c-ivory: 32 31 27;
-      --c-sand: 44 42 37;
-      --c-ink: 237 234 226;
-      --c-muted: 174 168 157; /* 7.7:1 on bone, 7.0:1 on ivory */
-      --c-faint: 144 138 128; /* 5.3:1 / 4.8:1, still AA */
-      --c-sky: 122 178 214;
-      --c-line-rgb: 237 234 226;
-      /* Multiply would nearly vanish against a near-black page; soft-light
-         still reads as texture rather than a wash of brightness. */
-      --grain-blend: soft-light;
-      --grain-opacity: 0.09;
-      --shadow-dock: rgba(0, 0, 0, 0.5);
-      color-scheme: dark;
-    }
-  }
-  :root[data-theme='dark'] {
-    --c-bone: 23 22 19;
-    --c-ivory: 32 31 27;
-    --c-sand: 44 42 37;
-    --c-ink: 237 234 226;
-    --c-muted: 174 168 157;
-    --c-faint: 144 138 128;
-    --c-sky: 122 178 214;
-    --c-line-rgb: 237 234 226;
-    --grain-blend: soft-light;
-    --grain-opacity: 0.09;
-    --shadow-dock: rgba(0, 0, 0, 0.5);
     color-scheme: dark;
+    background: rgb(var(--night));
+    scrollbar-color: rgb(var(--raised)) rgb(var(--night));
   }
 
   html {
-    background-color: rgb(var(--c-bone));
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-padding-top: calc(var(--header-h) + 1rem);
   }
-
-  /* Native smooth scrolling fights both Lenis and ScrollTrigger's position
-     reads, so it stays off; in-page jumps are handled in JS instead. */
-  html { scroll-behavior: auto; }
-  html.lenis-stopped { overflow: hidden; }
 
   body {
-    @apply bg-bone text-ink font-sans antialiased;
-    margin: 0;
-    overflow-x: hidden;
-    transition: background-color 200ms ease, color 200ms ease;
+    @apply bg-night font-sans text-base text-chalk antialiased;
+    font-size-adjust: from-font;
+    overflow-x: clip;
+    min-height: 100svh;
   }
 
-  ::selection { background: rgb(var(--c-ink)); color: rgb(var(--c-bone)); }
+  ::selection {
+    background: rgb(var(--amber));
+    color: rgb(var(--night));
+  }
 
   :focus-visible {
-    outline: 2px solid rgb(var(--c-ink));
+    outline: 2px solid rgb(var(--amber));
     outline-offset: 3px;
-    border-radius: 6px;
+    border-radius: 4px;
   }
 
-  h1, h2, h3, h4 { @apply font-medium; text-wrap: balance; }
-  img { max-width: 100%; display: block; }
+  #main:focus {
+    outline: none;
+  }
 
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
+  h1, h2, h3, h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
   }
 }
 
 @layer components {
-  .shell { padding-left: var(--shell-x); padding-right: var(--shell-x); }
-  .shell-inner { @apply mx-auto w-full max-w-shell; }
-
-  .eyebrow { @apply text-micro uppercase text-faint font-medium; }
-  .rule { border-top: 1px solid rgb(var(--c-line-rgb) / 0.12); }
-
-  /* Scroll reveals. The hidden state is scoped to .reveal-ready, which main.jsx
-     sets before the first render — so if the bundle never runs, nothing is
-     left invisible. IntersectionObserver adds .is-revealed; the transition is
-     CSS, which keeps it composited and independent of the animation frame. */
-  .reveal-ready [data-reveal] {
-    opacity: 0;
-    transform: translate3d(0, 26px, 0);
-    will-change: transform, opacity;
-  }
-  .reveal-ready [data-reveal].is-revealed {
-    opacity: 1;
-    transform: none;
-    /* 500ms, not 800: at 800 a reader scrolling at a normal pace outruns the
-       transition and spends the page reading text that is still arriving. */
-    transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1),
-                transform 500ms cubic-bezier(0.22, 1, 0.36, 1);
+  .shell {
+    @apply mx-auto w-full max-w-shell;
+    padding-inline: var(--gutter);
   }
 
-  /* Intro shutter. Lifts away rather than fading, so the page underneath is
-     never dimmed — it is already painted and simply gets uncovered. */
-  @keyframes preloader-lift {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-100%); }
-  }
-  .preloader {
-    animation: preloader-lift 380ms cubic-bezier(0.65, 0, 0.35, 1) 120ms both;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .preloader { display: none; }
+  /* The display face: wide and heavy, for headings only. */
+  .display {
+    font-family: theme('fontFamily.display');
+    font-weight: 800;
+    letter-spacing: -0.025em;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .reveal-ready [data-reveal] { opacity: 1; transform: none; }
+  .kicker {
+    @apply text-sm text-haze;
   }
-
-  /* Page-intro motion. Deliberately CSS rather than GSAP: a CSS animation is
-     time-based and always lands on its final frame, so a throttled ticker
-     (a first load in a background tab, say) can never leave the heading
-     stranded in its opening position. */
-  @keyframes intro-rise {
-    from { transform: translateY(108%); }
-    to   { transform: translateY(0); }
-  }
-  @keyframes intro-fade {
-    from { opacity: 0; transform: translateY(14px); }
-    to   { opacity: 1; transform: none; }
-  }
-
-  /* The h1 is the LCP element and starts clipped out of view, so its
-     duration and delay are a direct cost on Largest Contentful Paint —
-     kept short for that reason, not for taste. */
-  .reveal-ready [data-word] {
-    animation: intro-rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-  .reveal-ready [data-intro-fade] {
-    animation: intro-fade 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .reveal-ready [data-word],
-    .reveal-ready [data-intro-fade] { animation: none; }
-  }
-
-  /* Rounded chip used for the top bar and for tag rows. */
-  .chip {
-    @apply inline-flex items-center justify-center gap-2 rounded-pill border border-line
-           bg-ivory px-4 py-2 text-[13px] leading-none text-muted
-           transition-colors duration-150 ease-editorial;
-  }
-  .chip:hover { @apply border-lineStrong text-ink; }
-  .chip-active { @apply border-ink bg-ink text-bone; }
 
   .btn {
-    /* min-h-11 (44px) meets the standard touch-target floor on a phone;
-       sm:min-h-0 lifts it once a pointer is the more likely input. */
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-pill border border-line
-           px-4 py-2 text-[13px] font-medium leading-none
-           transition-colors duration-150 ease-editorial sm:min-h-0 sm:px-6 sm:py-3;
-  }
-  .btn-solid { @apply bg-ink text-bone border-ink hover:bg-ink/85; }
-  .btn-ghost { @apply bg-ivory text-ink hover:border-lineStrong; }
-
-  .card {
-    @apply rounded-card border border-line bg-ivory;
-    transition: background-color 200ms ease, border-color 150ms ease;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-full px-6 text-[0.9375rem] font-semibold;
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease,
+      transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Card with a cursor-following glow (see lib/spotlight.js) and a small
-     lift on hover. The glow sits under the content and never takes clicks. */
-  .spot-card {
-    transition: background-color 200ms ease, border-color 150ms ease,
-                transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
-                box-shadow 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  .btn:active {
+    transform: scale(0.97);
   }
-  .spot-card::before {
-    content: '';
+
+  .btn-amber {
+    @apply bg-amber text-night;
+  }
+
+  .btn-amber:hover {
+    background: rgb(228 194 92);
+  }
+
+  .btn-line {
+    @apply border border-lineStrong text-chalk;
+  }
+
+  .btn-line:hover {
+    @apply border-chalk bg-chalk/5;
+  }
+
+  .btn-sm {
+    @apply min-h-10 px-4 text-sm;
+  }
+
+  .link {
+    @apply text-chalk underline decoration-amber/60 decoration-2 underline-offset-4;
+    transition: text-decoration-color 160ms ease;
+  }
+
+  .link:hover {
+    @apply decoration-amber;
+  }
+
+  .tag {
+    @apply inline-flex items-center rounded-full border border-line px-3 py-1 text-xs text-haze;
+  }
+
+  /* Hairline section boundary. */
+  .rule {
+    @apply border-t border-line;
+  }
+
+  /* Long-form copy in case studies and the journal. */
+  .prose-body {
+    @apply max-w-measure text-haze;
+  }
+
+  .prose-body p + p {
+    @apply mt-5;
+  }
+
+  .prose-body strong {
+    @apply font-semibold text-chalk;
+  }
+
+  /* Form controls: 16px+ so iOS never zooms, 48px tall tap targets. */
+  .field-label {
+    @apply mb-2 block text-sm font-medium text-chalk;
+  }
+
+  .field-hint {
+    @apply mt-2 block text-sm text-faint;
+  }
+
+  .field-error {
+    @apply mt-2 block text-sm text-amber;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-lineStrong bg-raised/60 px-4 py-3 text-chalk placeholder:text-faint;
+    font: inherit;
+    font-size: max(1rem, 1em);
+    min-height: 3rem;
+    transition: border-color 160ms ease, background-color 160ms ease;
+  }
+
+  .input:hover {
+    border-color: rgb(var(--chalk) / 0.4);
+  }
+
+  .input:focus-visible {
+    @apply border-amber bg-raised;
+    outline: none;
+    box-shadow: 0 0 0 3px rgb(var(--amber) / 0.25);
+  }
+
+  .input:user-invalid {
+    @apply border-amber;
+  }
+
+  /* Option tile used by the scoping wizard's radio groups. The input stays
+     in the accessibility tree; the label carries the visual state. */
+  .choice input {
     position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    opacity: 0;
-    background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%),
-                rgb(var(--c-sky) / 0.22), transparent 60%);
-    transition: opacity 300ms ease;
-  }
-  .spot-card > * { position: relative; }
-  .spot-card:hover,
-  .spot-card:focus-visible {
-    border-color: rgb(var(--c-line-rgb) / 0.28);
-    transform: translateY(-4px);
-    box-shadow: 0 24px 60px -30px var(--shadow-dock);
-  }
-  .spot-card:hover::before,
-  .spot-card:focus-visible::before { opacity: 1; }
-  @media (prefers-reduced-motion: reduce) {
-    .spot-card:hover, .spot-card:focus-visible { transform: none; }
-  }
-
-  /* Expanding article body: animates grid rows from 0fr to 1fr, so the
-     height transition needs no measuring. */
-  .expand {
-    display: grid;
-    grid-template-rows: 0fr;
-    transition: grid-template-rows 500ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-  .expand[data-open='true'] { grid-template-rows: 1fr; }
-  .expand > * { overflow: hidden; }
-
-  /* Square icon button matching the pill family — used for the theme toggle.
-     44px on a phone, 36px once a pointer is the more likely input. */
-  .icon-btn {
-    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-pill text-ink
-           transition-colors duration-150 ease-editorial hover:bg-ink/5 sm:h-9 sm:w-9;
-  }
-
-  /* Fixed grain layer. Blend mode and opacity swap per theme (see :root
-     above) so the texture reads as texture rather than vanishing on a dark
-     page or washing out a light one. */
-  .grain {
-    mix-blend-mode: var(--grain-blend);
-    opacity: var(--grain-opacity);
-  }
-
-  .link-underline { @apply relative inline-block; }
-  .link-underline::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 100%;
+    clip-path: inset(50%);
+    width: 1px;
     height: 1px;
-    background: currentColor;
-    transform: scaleX(0);
-    transform-origin: right;
-    transition: transform 150ms cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: hidden;
+    white-space: nowrap;
   }
-  .link-underline:hover::after,
-  .link-underline:focus-visible::after {
-    transform: scaleX(1);
-    transform-origin: left;
+
+  .choice span {
+    @apply flex min-h-14 cursor-pointer items-center rounded-xl border border-lineStrong px-4 py-3 text-chalk;
+    transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+  }
+
+  .choice span:hover {
+    border-color: rgb(var(--chalk) / 0.45);
+  }
+
+  .choice input:checked + span {
+    @apply border-amber bg-amber/10;
+  }
+
+  .choice input:checked + span::before {
+    content: '';
+    @apply mr-3 inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-amber;
+  }
+
+  .choice input:focus-visible + span {
+    outline: 2px solid rgb(var(--amber));
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    clip-path: inset(50%);
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Header
+--------------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------------
+   Liquid glass navigation
+--------------------------------------------------------------------------- */
+
+.glass {
+  position: relative;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.03) 55%, rgb(255 255 255 / 0.09)),
+    rgb(var(--night) / 0.5);
+  -webkit-backdrop-filter: blur(22px) saturate(190%) brightness(1.08);
+  backdrop-filter: blur(22px) saturate(190%) brightness(1.08);
+  border: 1px solid rgb(255 255 255 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.4),
+    inset 0 -1px 0 rgb(255 255 255 / 0.06),
+    inset 0 0 18px rgb(255 255 255 / 0.04),
+    0 18px 40px -14px rgb(0 0 0 / 0.65),
+    0 2px 8px rgb(0 0 0 / 0.3);
+  view-transition-name: site-nav;
+}
+
+/* Capsules, like Apple's floating tab bar: 50% roundness, so every end is a
+   true semicircle. Items inside are capsules too. Because the radius is half
+   the height, the curve flows straight into the edge with no kink. */
+.glass,
+.glass .btn,
+.glass-link,
+.dock-item,
+.lens {
+  border-radius: 999px;
+}
+
+.lens-box > * {
+  position: relative;
+}
+
+/* The lens: a brighter glass bead that slides to the current page. */
+.lens {
+  position: absolute !important;
+  top: 0.375rem;
+  bottom: 0.375rem;
+  left: 0;
+  width: var(--lens-w, 0);
+  transform: translateX(var(--lens-x, 0));
+  opacity: var(--lens-o, 0);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.22), rgb(255 255 255 / 0.08));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45), 0 4px 14px -4px rgb(0 0 0 / 0.5);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .lens {
+    transition: transform 520ms cubic-bezier(0.34, 1.4, 0.5, 1), width 520ms cubic-bezier(0.34, 1.4, 0.5, 1), opacity 300ms ease;
+  }
+}
+
+.glass-link {
+  @apply px-3.5 py-2 text-[0.9375rem] text-chalk/75;
+  transition: color 160ms ease;
+}
+
+.glass-link:hover,
+.glass-link[aria-current='page'] {
+  @apply text-chalk;
+}
+
+.dock-item {
+  @apply flex min-h-[3.5rem] flex-1 flex-col items-center justify-center gap-0.5 text-[0.6875rem] font-medium text-chalk/70;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease, transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dock-item:active {
+  transform: scale(0.92);
+}
+
+.dock-item[aria-current='page'] {
+  @apply text-chalk;
+}
+
+.dock-item-cta {
+  @apply text-amber;
+}
+
+/* Keep content clear of the bottom dock on small screens. */
+@media (max-width: 1023px) {
+  body {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Reading progress: a hairline of amber under the header. */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 60;
+  height: 2px;
+  background: rgb(var(--amber));
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    @keyframes grow-progress {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    .scroll-progress {
+      animation: grow-progress auto linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+/* Mobile menu sheet: a native <dialog>, so focus trapping, Escape and the
+   top layer come for free. */
+.menu-sheet {
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  background: rgb(var(--night));
+  color: rgb(var(--chalk));
+}
+
+.menu-sheet::backdrop {
+  background: rgb(var(--night) / 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .menu-sheet[open] {
+    animation: sheet-in 420ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .menu-sheet[open] .menu-item {
+    animation: menu-item-in 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: calc(60ms + var(--i, 0) * 45ms);
+  }
+}
+
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(-2%); }
+}
+
+@keyframes menu-item-in {
+  from { opacity: 0; transform: translateY(18px); }
+}
+
+/* ---------------------------------------------------------------------------
+   Hero name: one word per line, one span per letter, so each letter can lean
+   toward the pointer (see StackStory). It paints at its final size and only
+   interaction moves it, with transforms that never shift layout.
+--------------------------------------------------------------------------- */
+
+.name-word {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Supporting copy rises in on load. Transform only, never opacity: text is
+   painted (and readable, and counted for LCP) from the very first frame. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-intro] {
+    animation: intro-rise 1000ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    animation-delay: var(--d, 0ms);
+  }
+}
+
+@keyframes intro-rise {
+  from { transform: translateY(26px); }
+}
+
+/* ---------------------------------------------------------------------------
+   Scroll reveals: CSS scroll-driven, progressive enhancement. Browsers
+   without support simply show the content, so nothing can get stuck hidden.
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    /* Movement only: text keeps full contrast at every point of the
+       animation, so it is never half-faded when someone is reading it. */
+    @keyframes reveal-up {
+      from { transform: translateY(56px); }
+    }
+
+    @keyframes reveal-mask {
+      from { clip-path: inset(0 0 100% 0); transform: translateY(30%); }
+    }
+
+    @keyframes reveal-tilt {
+      from { transform: perspective(900px) rotateX(22deg) translateY(90px) scale(0.93); }
+    }
+
+    [data-reveal] {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 28%;
+    }
+
+    [data-reveal='mask'] {
+      animation-name: reveal-mask;
+    }
+
+    [data-reveal='tilt'] {
+      animation-name: reveal-tilt;
+      transform-origin: 50% 100%;
+      animation-range: entry 0% cover 35%;
+    }
+  }
+}
+
+/* Linked headings open their letters up on hover. Spacing changes width
+   only within the heading's own line, so nothing around it moves. */
+.stretch-hover {
+  transition: letter-spacing 600ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+a.stretch-hover:hover,
+a.stretch-hover:focus-visible,
+a:hover .stretch-hover,
+a:focus-visible .stretch-hover,
+[data-card]:hover .stretch-hover {
+  letter-spacing: 0.02em;
+}
+
+/* ---------------------------------------------------------------------------
+   The stack: a CSS-only isometric poster of the three layers. It paints with
+   the HTML, stands in until WebGL is ready, and is what visitors without
+   WebGL (or with reduced data) keep.
+--------------------------------------------------------------------------- */
+
+.stack-poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  perspective: 1400px;
+  transition: opacity 900ms ease;
+}
+
+.stack-poster__tower {
+  position: relative;
+  width: min(62vmin, 34rem);
+  aspect-ratio: 1.45;
+  transform-style: preserve-3d;
+  transform: rotateX(58deg) rotateZ(-38deg);
+}
+
+.stack-poster__plate {
+  position: absolute;
+  inset: 0;
+  border-radius: 1.4rem;
+  border: 1px solid rgb(var(--chalk) / 0.28);
+  background:
+    linear-gradient(135deg, rgb(var(--raised) / 0.85), rgb(var(--deep) / 0.55));
+  box-shadow: 0 40px 80px -30px rgb(0 0 0 / 0.6);
+  transform: translateZ(var(--z));
+}
+
+.stack-poster__plate:nth-child(1) {
+  --z: -90px;
+  --d: -1.5s;
+  background-image:
+    radial-gradient(circle at center, rgb(var(--signal) / 0.6) 1.5px, transparent 2px),
+    linear-gradient(135deg, rgb(var(--raised) / 0.85), rgb(var(--deep) / 0.55));
+  background-size: 22px 22px, auto;
+}
+
+.stack-poster__plate:nth-child(2) {
+  --z: 0px;
+  background-image:
+    linear-gradient(90deg, transparent 49.6%, rgb(var(--amber) / 0.55) 50%, transparent 50.4%),
+    linear-gradient(0deg, transparent 49.4%, rgb(var(--amber) / 0.35) 50%, transparent 50.6%),
+    linear-gradient(135deg, rgb(var(--raised) / 0.85), rgb(var(--deep) / 0.55));
+}
+
+.stack-poster__plate:nth-child(3) {
+  --z: 90px;
+  --d: -3s;
+  border-color: rgb(var(--amber) / 0.7);
+  background-image:
+    linear-gradient(rgb(var(--chalk) / 0.18), rgb(var(--chalk) / 0.18)),
+    linear-gradient(rgb(var(--chalk) / 0.1), rgb(var(--chalk) / 0.1)),
+    linear-gradient(135deg, rgb(var(--raised) / 0.92), rgb(var(--deep) / 0.6));
+  background-size: 70% 12%, 40% 30%, auto;
+  background-position: 12% 14%, 12% 62%, 0 0;
+  background-repeat: no-repeat;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .stack-poster__plate {
+    animation: plate-float 6s ease-in-out infinite alternate;
+    animation-delay: var(--d, 0s);
+  }
+}
+
+@keyframes plate-float {
+  to { transform: translateZ(calc(var(--z) * 1.25)); }
+}
+
+/* ---------------------------------------------------------------------------
+   Cards: 3D tilt and image zoom.
+--------------------------------------------------------------------------- */
+
+/* 3D tilt toward the pointer: pointer position arrives as --rx / --ry from
+   a tiny handler; the transform itself stays on the compositor. */
+.tilt {
+  transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.tilt-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--gx, 50%) var(--gy, 50%),
+    rgb(255 255 255 / 0.16),
+    transparent 45%
+  );
+  opacity: 0;
+  transition: opacity 400ms ease;
+}
+
+.tilt:hover .tilt-glare,
+[data-card]:hover .tilt-glare {
+  opacity: 1;
+}
+
+.media-zoom img {
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-card]:hover .media-zoom img,
+[data-card]:focus-within .media-zoom img {
+  transform: scale(1.04);
+}
+
+/* ---------------------------------------------------------------------------
+   View transitions between routes: the old page sinks, the new one rises.
+--------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-out 280ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  ::view-transition-new(root) {
+    animation: vt-in 520ms cubic-bezier(0.16, 1, 0.3, 1) 60ms both;
+  }
+
+  ::view-transition-group(project-media) {
+    animation-duration: 620ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+::view-transition-old(project-media),
+::view-transition-new(project-media) {
+  height: 100%;
+  object-fit: cover;
+}
+
+@keyframes vt-out {
+  to { opacity: 0; transform: translateY(-24px) scale(0.985); }
+}
+
+@keyframes vt-in {
+  from { opacity: 0; transform: translateY(40px); }
+}
+
+
+
+/* ---------------------------------------------------------------------------
+   CV: prints as a clean one-column document on white.
+--------------------------------------------------------------------------- */
+
+@media print {
+  :root {
+    --night: 255 255 255;
+    --deep: 255 255 255;
+    --raised: 245 245 245;
+    --chalk: 20 24 36;
+    --haze: 50 56 70;
+    --faint: 80 86 100;
+    --amber: 160 100 0;
+  }
+
+  .glass,
+  .scroll-progress,
+  .site-footer,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    font-size: 11pt;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+/* The layer in focus (set from scroll) gets an amber rule and steps
+   forward. Others keep full contrast; they just sit back a little. */
+.layer-step > article {
+  position: relative;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.layer-step > article::before {
+  content: '';
+  position: absolute;
+  left: -1.25rem;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  width: 3px;
+  border-radius: 3px;
+  background: rgb(var(--amber));
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.layer-step[data-active='true'] > article::before {
+  transform: scaleY(1);
+}
+
+.layer-step[data-active='true'] .kicker {
+  color: rgb(var(--amber));
+}
+
+@media (max-width: 1023px) {
+  .layer-step > article::before {
+    display: none;
+  }
+
+  .layer-step[data-active='true'] > article {
+    border-color: rgb(var(--amber) / 0.6);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 1024px) {
+  .layer-step[data-active='false'] > article {
+    transform: translateX(-14px) scale(0.97);
+    transform-origin: 0 50%;
+  }
+}
+
+/* Lenis */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Pinned reel cards: as wide as the screen allows, but never so tall that
+   the heading and a card's text stop fitting in one viewport. */
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .reel-item {
+    width: min(42vw, 44rem, calc((100svh - 26rem) * 1.6));
   }
 }

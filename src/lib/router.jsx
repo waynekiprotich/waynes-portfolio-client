@@ -2,6 +2,9 @@
    components ship together here on purpose: this is one small module
    standing in for a routing library, not a component file. */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
+import { preloadRoute } from '@/lib/pages'
+import { getLenis } from '@/hooks/useLenis'
 
 /**
  * The eight pieces of routing this site actually uses.
@@ -30,12 +33,50 @@ const parseUrl = (url) => {
   return { pathname, search, hash }
 }
 
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/**
+ * Runs a DOM-changing update inside a view transition where the browser
+ * supports it, and plainly where it does not. Focus moves to <main> once the
+ * new page is in place, so keyboard and screen reader users start at the top
+ * of the new content rather than on a link that no longer exists.
+ */
+function transition(update) {
+  const done = () => document.getElementById('main')?.focus({ preventScroll: true })
+  if (!document.startViewTransition || reducedMotion()) {
+    update()
+    done()
+    return
+  }
+  document.startViewTransition(update).finished.finally(done)
+}
+
+const scrollToY = (y) => {
+  const lenis = getLenis()
+  if (lenis) lenis.scrollTo(y, { immediate: true, force: true })
+  window.scrollTo(0, y)
+}
+
 /** `url` is for build-time prerendering, where there is no window. */
 export function BrowserRouter({ url, children }) {
   const [location, setLocation] = useState(() => (url ? parseUrl(url) : readLocation()))
 
+  // Scroll position is stored on each history entry, so Back returns to
+  // where the visitor was rather than the top of the page.
   useEffect(() => {
-    const onPop = () => setLocation(readLocation())
+    if ('scrollRestoration' in window.history) window.history.scrollRestoration = 'manual'
+
+    const onPop = (event) => {
+      const y = event.state?.y ?? 0
+      preloadRoute(window.location.pathname)
+        .catch(() => {})
+        .then(() =>
+          transition(() => {
+            flushSync(() => setLocation(readLocation()))
+            scrollToY(y)
+          })
+        )
+    }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
@@ -43,8 +84,22 @@ export function BrowserRouter({ url, children }) {
   const navigate = useCallback((to, { replace = false } = {}) => {
     const current = window.location.pathname + window.location.search + window.location.hash
     if (to === current) return
-    window.history[replace ? 'replaceState' : 'pushState']({}, '', to)
-    setLocation(readLocation())
+
+    const target = new URL(to, window.location.href)
+    window.history.replaceState({ ...window.history.state, y: window.scrollY }, '')
+
+    // Load the next page's chunk first, so the transition's "new" snapshot
+    // is the real page, not a loading state.
+    preloadRoute(target.pathname)
+      .catch(() => {})
+      .then(() =>
+        transition(() => {
+          window.history[replace ? 'replaceState' : 'pushState']({ y: 0 }, '', to)
+          flushSync(() => setLocation(readLocation()))
+          if (target.hash) document.getElementById(target.hash.slice(1))?.scrollIntoView()
+          else scrollToY(0)
+        })
+      )
   }, [])
 
   const value = useMemo(() => ({ location, navigate }), [location, navigate])
@@ -123,6 +178,11 @@ function shouldHandle(event, target) {
   )
 }
 
+/** Warm the next page's chunk as soon as intent shows (hover, focus, touch). */
+const warm = (to) => () => {
+  preloadRoute(to.split(/[?#]/)[0]).catch(() => {})
+}
+
 export function Link({ to, replace = false, onClick, target, ...rest }) {
   const navigate = useNavigate()
 
@@ -133,13 +193,23 @@ export function Link({ to, replace = false, onClick, target, ...rest }) {
     navigate(to, { replace })
   }
 
-  return <a href={to} target={target} {...rest} onClick={handleClick} />
+  return (
+    <a
+      href={to}
+      target={target}
+      onPointerEnter={warm(to)}
+      onFocus={warm(to)}
+      onTouchStart={warm(to)}
+      {...rest}
+      onClick={handleClick}
+    />
+  )
 }
 
 /**
- * `className` may be a string or a function of `{ isActive }`, matching the
- * call sites in ChipBar and NavDock. A section is active on its own path and
- * on anything beneath it, so /work stays lit on /work/apexgrid.
+ * `className` may be a string or a function of `{ isActive }`. A section is
+ * active on its own path and on anything beneath it, so /work stays lit on
+ * /work/apexgrid.
  */
 export function NavLink({ to, className, children, end = false, ...rest }) {
   const { pathname } = useLocation()

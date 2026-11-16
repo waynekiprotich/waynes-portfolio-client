@@ -1,47 +1,74 @@
+import { Link } from '@/lib/router'
 import SEO from '@/components/SEO'
-import PageHeader from '@/components/PageHeader'
-import ServicesList from '@/components/Services'
-import Process from '@/components/Process'
-import ContactCTA from '@/components/ContactCTA'
+import { breadcrumbs } from '@/lib/schema'
+import PageIntro from '@/components/PageIntro'
+import { ServiceList, ProcessSteps } from '@/components/ServiceList'
+import { SERVICES, SITE } from '@/data/site'
 
 export default function Services() {
   return (
     <>
       <SEO
-        title="Website Development Services in Nairobi, Kenya"
-        description="Website and web app development in Nairobi, Kenya: business websites, e-commerce with M-Pesa, full-stack applications, APIs, SEO and maintenance. Pricing in KES."
+        title="Services"
+        description="Website and web application development in Nairobi, Kenya: business websites, full-stack apps, M-Pesa e-commerce, APIs, dashboards, performance, SEO and maintenance."
         path="/services"
+        schema={[
+          breadcrumbs([['Services', '/services']]),
+          {
+            '@type': 'Service',
+            serviceType: 'Web development',
+            provider: { '@id': `${SITE.url}/#business` },
+            areaServed: [
+              { '@type': 'City', name: 'Nairobi' },
+              { '@type': 'Country', name: 'Kenya' },
+            ],
+            hasOfferCatalog: {
+              '@type': 'OfferCatalog',
+              name: 'Web development services',
+              itemListElement: SERVICES.map((s) => ({
+                '@type': 'Offer',
+                itemOffered: { '@type': 'Service', name: s.title, description: s.body },
+              })),
+            },
+          },
+        ]}
       />
 
-      <PageHeader
-        eyebrow="Services"
-        title="Web development in Nairobi, Kenya"
-        lede="Websites, web applications and online stores for businesses across Kenya. Most engagements combine several of the services below; scope is agreed before anything is built."
-      />
+      <PageIntro
+        label="Services"
+        title="Websites and web apps, built end to end"
+        lede="One person from the first conversation to launch and after: the database, the API, the interface and the hosting. For businesses in Kenya and teams anywhere."
+      >
+        <div className="flex flex-wrap gap-3">
+          <Link to="/estimator" className="btn btn-amber">
+            Scope a project
+          </Link>
+          <Link to="/work" className="btn btn-line">
+            See past work
+          </Link>
+        </div>
+      </PageIntro>
 
-      <section className="shell pb-4" aria-labelledby="services-kenya">
-        <div className="shell-inner grid gap-8 border-t border-line pt-10 md:grid-cols-2 md:gap-16">
-          <h2 id="services-kenya" className="text-[clamp(1.4rem,2.4vw,2rem)] font-medium tracking-tight">
-            Built for how Kenyan businesses sell
+      <section aria-labelledby="what-title" className="shell pb-20">
+        <h2 id="what-title" className="sr-only">
+          What I offer
+        </h2>
+        <ServiceList />
+      </section>
+
+      <section aria-labelledby="process-title" className="border-t border-line bg-deep">
+        <div className="shell py-20 sm:py-28">
+          <h2 id="process-title" className="display text-h2" data-reveal="mask">
+            How a project runs
           </h2>
-          <div className="space-y-4 text-[15px] leading-relaxed text-muted">
-            <p>
-              I am a software engineer and web developer based in Nairobi. I build business
-              websites, landing pages, e-commerce stores and custom web applications, from the
-              database to deployment.
-            </p>
-            <p>
-              Stores and booking flows can take payment with M-Pesa, so customers pay the way they
-              already do. Quotes are in Kenyan shillings, and I work with clients in Nairobi and
-              remotely anywhere in Kenya.
-            </p>
+          <p className="mt-4 max-w-measure text-haze" data-reveal>
+            Five steps, and you can see the work at every one of them.
+          </p>
+          <div className="mt-12">
+            <ProcessSteps />
           </div>
         </div>
       </section>
-
-      <ServicesList withHeading={false} />
-      <Process />
-      <ContactCTA />
     </>
   )
 }

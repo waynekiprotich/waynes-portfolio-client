@@ -1,80 +1,60 @@
-import { useMemo, useState } from 'react'
 import SEO from '@/components/SEO'
-import PageHeader from '@/components/PageHeader'
-import ProjectCard from '@/components/work/ProjectCard'
-import ContactCTA from '@/components/ContactCTA'
-import useReveal from '@/hooks/useReveal'
-import { WORK } from '@/data/work'
+import { breadcrumbs } from '@/lib/schema'
+import PageIntro from '@/components/PageIntro'
+import ProjectCard from '@/components/ProjectCard'
+import { PROJECTS } from '@/data/projects'
+import { SITE } from '@/data/site'
 
 export default function Work() {
-  const [filter, setFilter] = useState('All')
-
-  const categories = useMemo(
-    () => ['All', ...Array.from(new Set(WORK.map((w) => w.category)))],
-    []
-  )
-
-  const visible = useMemo(
-    () => (filter === 'All' ? WORK : WORK.filter((w) => w.category === filter)),
-    [filter]
-  )
-
-  const scope = useReveal({ y: 26 }, [filter])
+  const [first, ...rest] = PROJECTS
 
   return (
     <>
       <SEO
-        title="Web Development Projects"
-        description="Web development projects by Wayne Kiprotich, a software engineer in Nairobi, Kenya: e-commerce with M-Pesa, dashboards and full-stack applications."
+        title="Work"
+        description="Projects by Wayne Kiprotich: a 3D Nairobi travel guide, a Formula 1 dashboard, an M-Pesa clothing store and two competitive programming platforms, with case studies."
         path="/work"
+        schema={[
+          breadcrumbs([['Work', '/work']]),
+          {
+            '@type': 'CollectionPage',
+            name: `Work by ${SITE.name}`,
+            url: `${SITE.url}/work`,
+            hasPart: PROJECTS.map((p) => ({
+              '@type': 'CreativeWork',
+              name: p.title,
+              url: `${SITE.url}/work/${p.slug}`,
+            })),
+          },
+        ]}
       />
 
-      <PageHeader
-        eyebrow="Selected work"
-        title="Projects"
-        lede="Each entry links to a technical case study covering the problem, the architecture, the decisions and what the result actually measured."
+      <PageIntro
+        label={`${PROJECTS.length} projects`}
+        title="Work"
+        lede="Products I designed and built, front to back. Each one has a short case study: the problem, what I built and the decisions that shaped it."
       />
 
-      <section ref={scope} className="shell py-12 sm:py-16" aria-label="Project index">
-        <div className="shell-inner">
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter projects by category">
-            {categories.map((category) => (
-              <button
-                key={category}
-                type="button"
-                onClick={() => setFilter(category)}
-                aria-pressed={filter === category}
-                className={`min-h-11 rounded-pill border px-4 py-2 text-[12px] uppercase tracking-[0.14em]
-                            transition-colors duration-150 sm:min-h-0 ${
-                              filter === category
-                                ? 'border-ink bg-ink text-bone'
-                                : 'border-line text-muted hover:border-lineStrong hover:text-ink'
-                            }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {visible.map((project, i) => (
+      <section aria-label="Projects" className="shell pb-28">
+        <ProjectCard
+          project={first}
+          priority
+          headingLevel={2}
+          sizes="(min-width: 1440px) 1340px, 94vw"
+          className="mb-20"
+        />
+        <ul className="grid gap-x-10 gap-y-20 md:grid-cols-2">
+          {rest.map((project) => (
+            <li key={project.slug} data-reveal="tilt">
               <ProjectCard
-                key={project.slug}
                 project={project}
-                ratio="aspect-[16/9]"
-                priority={i < 3}
-                index={i}
+                headingLevel={2}
+                sizes="(min-width: 768px) 46vw, 94vw"
               />
-            ))}
-          </div>
-
-          {visible.length === 0 && (
-            <p className="mt-10 text-[14px] text-muted">No projects in this category yet.</p>
-          )}
-        </div>
+            </li>
+          ))}
+        </ul>
       </section>
-
-      <ContactCTA />
     </>
   )
 }

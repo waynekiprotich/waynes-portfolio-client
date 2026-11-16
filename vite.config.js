@@ -8,14 +8,9 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // gsap is the only dependency big enough to be worth its own
-          // chunk; routing is now ~1kB of local code and belongs inline.
-          gsap: ['gsap'],
-        },
-      },
-    },
+    target: 'es2022',
+    // three.js arrives in its own lazy chunk with the 3D scene; nothing
+    // else is large enough to split by hand.
+    chunkSizeWarningLimit: 700,
   },
 })

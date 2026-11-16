@@ -1,127 +1,114 @@
 /**
- * Writes a per-route copy of the built index.html with that route's rendered
- * page HTML inside #root, and its real <title>, description, canonical and
- * og/twitter tags baked into the head.
+ * Prerenders every route into its own static HTML file, after `vite build`:
  *
- * Why the head: react-helmet-async sets those tags after React runs. Google
- * executes JS and sees them, but link unfurlers — Slack, iMessage, WhatsApp,
- * LinkedIn, Twitter — do not.
+ *  - the rendered page goes inside #root, so the first paint, crawlers and
+ *    link unfurlers all get real content without running JavaScript;
+ *  - the page's <SEO> output (title, description, canonical, Open Graph,
+ *    structured data) replaces the <!--app-head--> marker in index.html;
+ *  - dist/404.html is the not-found page, which Vercel serves with a real
+ *    404 status for any path that has no file;
+ *  - dist/sitemap.xml is generated from the same route list, so it can never
+ *    drift from the pages that exist.
  *
- * Why the body: without it every page is an empty <div id="root"> until the
- * bundle runs, so crawlers only see content if they execute JavaScript, and
- * visitors see nothing until it loads. main.jsx preloads the route's chunk and
- * then replaces this markup with the live app.
- *
- * Vercel checks the filesystem before applying a rewrite, so
- * dist/work/apexgrid/index.html wins for /work/apexgrid. Paths with no
- * prerendered file fall through to dist/spa.html, which keeps an empty root.
- *
- * Titles and descriptions come from the Helmet output of the render itself,
- * so they cannot drift from what each page passes to <SEO>.
+ * main.jsx preloads the route's chunk and then replaces this markup with the
+ * live app.
  */
 import { createServer } from 'vite'
-import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, rm } from 'node:fs/promises'
 import path from 'node:path'
 
 const DIST = 'dist'
+const MARKER = '<!--app-head-->'
 
-// Static routes. Case-study routes are added from the data module below.
-const STATIC_ROUTES = ['/', '/work', '/about', '/services', '/estimator', '/journal', '/cv', '/contact']
+// [path, sitemap priority]. Case studies are added from the data module.
+const STATIC_ROUTES = [
+  ['/', '1.0'],
+  ['/work', '0.9'],
+  ['/cv', '0.8'],
+  ['/about', '0.8'],
+  ['/services', '0.8'],
+  ['/estimator', '0.7'],
+  ['/contact', '0.6'],
+  ['/journal', '0.5'],
+]
 
-const escapeHtml = (value) =>
-  String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-
-/** Replace the content of a meta tag matched by attribute, if present. */
-function setMeta(html, attr, name, content) {
-  const pattern = new RegExp(`(<meta\\s+${attr}="${name}"\\s+content=")[^"]*(")`, 'i')
-  return html.replace(pattern, `$1${escapeHtml(content)}$2`)
-}
-
-function buildHtml(base, { title, description, url, image }) {
-  let html = base.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`)
-  html = html.replace(
-    /(<link rel="canonical" href=")[^"]*(")/i,
-    `$1${escapeHtml(url)}$2`
-  )
-  html = setMeta(html, 'property', 'og:title', title)
-  html = setMeta(html, 'property', 'og:url', url)
-  html = setMeta(html, 'name', 'twitter:title', title)
-  if (description) {
-    html = setMeta(html, 'name', 'description', description)
-    html = setMeta(html, 'property', 'og:description', description)
-    html = setMeta(html, 'name', 'twitter:description', description)
-  }
-  if (image) {
-    html = setMeta(html, 'property', 'og:image', image)
-    html = setMeta(html, 'name', 'twitter:image', image)
-  }
-  return html
-}
-
-const decodeHtml = (value) =>
-  value
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;|&#39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
-
-/** Text of the first tag in a Helmet tag string, e.g. `<title data-rh>…</title>`. */
-const tagText = (tags) => decodeHtml(tags.replace(/<[^>]+>/g, ''))
-
-/** `content` of the Helmet meta tag with the given name/property, if any. */
-function helmetMeta(tags, attr, name) {
-  const match = tags.match(new RegExp(`<meta[^>]*\\s${attr}="${name}"[^>]*\\scontent="([^"]*)"`, 'i'))
-  return match ? decodeHtml(match[1]) : undefined
-}
-
-// Vite resolves the `@/` alias, JSX and the JSON imports for us, so pages are
-// rendered from exactly the modules the browser runs.
 const server = await createServer({
   server: { middlewareMode: true },
   appType: 'custom',
   logLevel: 'silent',
-  // react-helmet-async's `main` is CommonJS, whose named exports Node cannot
-  // hand to an ESM import. Bundling it lets Vite use its `module` (ESM) build.
+  // react-helmet-async's `main` is CommonJS; bundling it lets Vite use its
+  // ESM build.
   ssr: { noExternal: ['react-helmet-async'] },
 })
-const { caseStudies } = await server.ssrLoadModule('/src/data/work.js')
-const { SITE } = await server.ssrLoadModule('/src/data/site.js')
-const { render } = await server.ssrLoadModule('/src/entry-server.jsx')
-
-const base = await readFile(path.join(DIST, 'index.html'), 'utf8')
-
-// Fallback for paths with no prerendered file (see vercel.json): an empty root,
-// so an unknown URL never serves the home page's content under its address.
-await writeFile(path.join(DIST, 'spa.html'), base)
-
-const routes = [...STATIC_ROUTES, ...caseStudies.map((study) => `/work/${study.slug}`)]
 
 try {
-  for (const route of routes) {
+  const { PROJECTS } = await server.ssrLoadModule('/src/data/projects.js')
+  const { SITE } = await server.ssrLoadModule('/src/data/site.js')
+  const { render } = await server.ssrLoadModule('/src/entry-server.jsx')
+
+  let base = await readFile(path.join(DIST, 'index.html'), 'utf8')
+  if (!base.includes(MARKER)) throw new Error(`${MARKER} missing from dist/index.html`)
+
+  // Inline the stylesheet (about 8 kB gzipped). It is the only render-blocking
+  // request, and every page needs all of it, so shipping it inside the HTML
+  // saves a full round trip before first paint.
+  const cssLink = base.match(/<link rel="stylesheet"[^>]*href="(\/assets\/[^"]+\.css)"[^>]*>/)
+  if (cssLink) {
+    const css = await readFile(path.join(DIST, cssLink[1]), 'utf8')
+    base = base.replace(cssLink[0], () => `<style>${css}</style>`)
+  }
+
+  // Paint first, then start the app. Every page is complete, readable HTML
+  // with working links before any JavaScript runs, so the bundle does not
+  // need to compete with first paint: a 1-line boot module asks for it on the
+  // frame after the page is drawn.
+  const entry = base.match(/<script type="module" crossorigin src="\/assets\/(index-[^"]+\.js)"><\/script>/)
+  if (entry) {
+    const boot = `boot-${entry[1].slice('index-'.length)}`
+    await writeFile(
+      path.join(DIST, 'assets', boot),
+      `requestAnimationFrame(()=>setTimeout(()=>import('./${entry[1]}')))\n`
+    )
+    base = base.replace(entry[0], `<script type="module" src="/assets/${boot}"></script>`)
+  }
+
+  const page = async (route) => {
     const { html: body, helmet } = await render(route)
-    const meta = helmet.meta.toString()
+    const head = [helmet.title, helmet.meta, helmet.link, helmet.script]
+      .map((part) => part.toString())
+      .filter(Boolean)
+      .join('\n    ')
+    return base.replace(MARKER, head).replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+  }
 
-    let html = buildHtml(base, {
-      title: tagText(helmet.title.toString()),
-      description: helmetMeta(meta, 'name', 'description'),
-      url: `${SITE.url}${route}`,
-      image: helmetMeta(meta, 'property', 'og:image'),
-    })
-    // Page-level structured data (e.g. ProfilePage on /about).
-    html = html.replace('</head>', `${helmet.script.toString()}\n  </head>`)
-    html = html.replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+  const routes = [
+    ...STATIC_ROUTES,
+    ...PROJECTS.map((p) => [`/work/${p.slug}`, '0.7']),
+  ]
 
+  for (const [route] of routes) {
     const dir = path.join(DIST, route)
     await mkdir(dir, { recursive: true })
-    await writeFile(path.join(dir, 'index.html'), html)
+    await writeFile(path.join(dir, 'index.html'), await page(route))
   }
+
+  await writeFile(path.join(DIST, '404.html'), await page('/404'))
+
+  const today = new Date().toISOString().slice(0, 10)
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${routes
+  .map(
+    ([route, priority]) =>
+      `  <url><loc>${SITE.url}${route === '/' ? '/' : route}</loc><lastmod>${today}</lastmod><priority>${priority}</priority></url>`
+  )
+  .join('\n')}
+</urlset>
+`
+  await writeFile(path.join(DIST, 'sitemap.xml'), sitemap)
+  await rm(path.join(DIST, 'spa.html'), { force: true })
+
+  console.log(`prerendered ${routes.length} routes, 404.html and sitemap.xml`)
 } finally {
   await server.close()
 }
-
-console.log(`prerendered ${routes.length} routes`)

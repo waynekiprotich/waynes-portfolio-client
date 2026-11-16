@@ -1,45 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en-KE">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <title>Wayne Kiprotich | Software Engineer &amp; Web Developer in Nairobi, Kenya</title>
-    <meta name="description" content="Software engineer and web developer in Nairobi, Kenya. I build fast websites, web applications and M-Pesa e-commerce stores for businesses across Kenya." />
-    <meta name="keywords" content="Wayne Kiprotich, software engineer Kenya, web developer Kenya, website developer Nairobi, web developer Nairobi, full stack developer Kenya, M-Pesa integration, React, Python, Flask" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0A0A0A" />
+    <meta name="color-scheme" content="dark" />
     <meta name="author" content="Wayne Kiprotich" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
-    <meta id="theme-color-meta" name="theme-color" content="#EFECE5" />
-    <link rel="canonical" href="https://www.waynekiprotich.online/" />
 
-    <meta property="og:title" content="Wayne Kiprotich | Software Engineer &amp; Web Developer in Nairobi, Kenya" />
-    <meta property="og:description" content="Software engineer and web developer in Nairobi, Kenya. I build fast websites, web applications and M-Pesa e-commerce stores for businesses across Kenya." />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://www.waynekiprotich.online/" />
+    <!-- Per-page title, description, canonical and Open Graph tags are
+         injected here at build time by scripts/prerender-meta.mjs, from the
+         same <SEO> output React renders in the browser. -->
+    <!--app-head-->
+
     <meta property="og:site_name" content="Wayne Kiprotich" />
-    <meta property="og:image" content="https://www.waynekiprotich.online/og-image.png" />
     <meta property="og:locale" content="en_KE" />
-
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Wayne Kiprotich | Software Engineer &amp; Web Developer in Nairobi, Kenya" />
-    <meta name="twitter:description" content="Software engineer and web developer in Nairobi, Kenya. I build fast websites, web applications and M-Pesa e-commerce stores for businesses across Kenya." />
-    <meta name="twitter:image" content="https://www.waynekiprotich.online/og-image.png" />
 
-    <link rel="manifest" href="/site.webmanifest" />
-    <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" href="/favicon-48.png" type="image/png" sizes="48x48" />
-    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
-    <link rel="icon" href="/favicon-16.png" type="image/png" sizes="16x16" />
-    <!-- Dark variants: swapped in by browsers that support media-scoped
-         favicon links (Chromium, Safari on macOS/iOS). Others just keep the
-         light set above. -->
-    <link rel="icon" href="/favicon-48-dark.png" type="image/png" sizes="48x48" media="(prefers-color-scheme: dark)" />
-    <link rel="icon" href="/favicon-32-dark.png" type="image/png" sizes="32x32" media="(prefers-color-scheme: dark)" />
-    <link rel="icon" href="/favicon-16-dark.png" type="image/png" sizes="16x16" media="(prefers-color-scheme: dark)" />
+    <link rel="preload" href="/fonts/anybody.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/instrument-sans.woff2" as="font" type="font/woff2" crossorigin />
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Structured data: who runs this site, what the business offers and
-         where it serves. Static so crawlers read it without running JS. -->
+    <!-- Who runs this site and what the business offers. Static, so every
+         crawler reads it without running JavaScript. Pages add their own
+         (breadcrumbs, case studies, profile) on top. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -48,41 +38,31 @@
             "@type": "Person",
             "@id": "https://www.waynekiprotich.online/#person",
             "name": "Wayne Kiprotich",
-            "jobTitle": "Software Engineer and Web Developer",
+            "jobTitle": "Full-Stack Software Engineer",
+            "description": "Full-stack software engineer in Nairobi, Kenya, building web applications, REST APIs and data-driven dashboards.",
             "url": "https://www.waynekiprotich.online/",
-            "image": "https://www.waynekiprotich.online/profile/pfp-720.jpg",
+            "image": "https://www.waynekiprotich.online/img/portrait-720.webp",
             "email": "mailto:waynekip123@icloud.com",
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Nairobi",
-              "addressCountry": "KE"
-            },
-            "knowsAbout": ["Web development", "Full-stack development", "React", "Python", "Flask", "Node.js", "PostgreSQL", "M-Pesa integration", "E-commerce"],
-            "sameAs": [
-              "https://github.com/waynekiprotich",
-              "https://linkedin.com/in/wayne-kiprotich-1a8ba6388"
-            ]
+            "address": { "@type": "PostalAddress", "addressLocality": "Nairobi", "addressCountry": "KE" },
+            "alumniOf": { "@type": "EducationalOrganization", "name": "Moringa School" },
+            "knowsAbout": ["React", "TypeScript", "JavaScript", "Python", "Flask", "Node.js", "PostgreSQL", "Redis", "REST APIs", "Three.js", "M-Pesa integration", "Web performance", "SEO"],
+            "sameAs": ["https://github.com/waynekiprotich", "https://linkedin.com/in/wayne-kiprotich-1a8ba6388"]
           },
           {
             "@type": "ProfessionalService",
             "@id": "https://www.waynekiprotich.online/#business",
             "name": "Wayne Kiprotich | Web Development",
-            "description": "Website and web application development in Nairobi, Kenya: business websites, e-commerce with M-Pesa, full-stack applications, APIs and maintenance.",
+            "description": "Website and web application development in Nairobi, Kenya: business websites, e-commerce with M-Pesa, full-stack applications, APIs, dashboards and maintenance.",
             "url": "https://www.waynekiprotich.online/",
             "image": "https://www.waynekiprotich.online/og-image.png",
             "email": "mailto:waynekip123@icloud.com",
             "founder": { "@id": "https://www.waynekiprotich.online/#person" },
-            "address": {
-              "@type": "PostalAddress",
-              "addressLocality": "Nairobi",
-              "addressCountry": "KE"
-            },
+            "address": { "@type": "PostalAddress", "addressLocality": "Nairobi", "addressCountry": "KE" },
             "areaServed": [
               { "@type": "City", "name": "Nairobi" },
               { "@type": "Country", "name": "Kenya" }
             ],
-            "currenciesAccepted": "KES",
-            "knowsAbout": ["Website development", "Web application development", "E-commerce development", "M-Pesa integration", "API development", "SEO"]
+            "currenciesAccepted": "KES"
           },
           {
             "@type": "WebSite",
@@ -95,43 +75,6 @@
         ]
       }
     </script>
-
-    <script>
-      // Resolve the theme before first paint, so there is never a flash of
-      // the wrong palette. An explicit choice (from the toggle) is read from
-      // localStorage and wins; otherwise the system preference is used.
-      // Failure here (private browsing, storage disabled) just falls through
-      // to the CSS `prefers-color-scheme` branch in styles/index.css — theme
-      // resolution never depends on this script succeeding.
-      (function () {
-        try {
-          var stored = localStorage.getItem('wk:theme');
-          var theme =
-            stored === 'light' || stored === 'dark'
-              ? stored
-              : window.matchMedia('(prefers-color-scheme: dark)').matches
-              ? 'dark'
-              : 'light';
-          document.documentElement.setAttribute('data-theme', theme);
-          var meta = document.getElementById('theme-color-meta');
-          if (meta) meta.setAttribute('content', theme === 'dark' ? '#171613' : '#EFECE5');
-        } catch (e) {
-          /* CSS fallback still resolves the correct theme. */
-        }
-      })();
-    </script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'"
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap"
-    />
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" />
-    </noscript>
   </head>
 
   <body>

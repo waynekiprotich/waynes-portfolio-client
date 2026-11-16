@@ -1,42 +1,42 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: ['selector', '[data-theme="dark"]'],
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: {
     extend: {
+      // Palette taken from the CV (navy sidebar, amber headings) so the site
+      // and the PDF read as one identity. Values live in styles/index.css.
       colors: {
-        // Semantic, role-based tokens backed by CSS variables (see
-        // styles/index.css). Dark mode swaps the variables, not the classes —
-        // no component needs a `dark:` variant of its own.
-        bone:       'rgb(var(--c-bone) / <alpha-value>)',
-        ivory:      'rgb(var(--c-ivory) / <alpha-value>)',
-        sand:       'rgb(var(--c-sand) / <alpha-value>)',
-        ink:        'rgb(var(--c-ink) / <alpha-value>)',
-        muted:      'rgb(var(--c-muted) / <alpha-value>)',
-        faint:      'rgb(var(--c-faint) / <alpha-value>)',
-        sky:        'rgb(var(--c-sky) / <alpha-value>)',
-        line:       'rgb(var(--c-line-rgb) / 0.12)',
-        lineStrong: 'rgb(var(--c-line-rgb) / 0.28)',
+        night: 'rgb(var(--night) / <alpha-value>)',
+        deep: 'rgb(var(--deep) / <alpha-value>)',
+        raised: 'rgb(var(--raised) / <alpha-value>)',
+        chalk: 'rgb(var(--chalk) / <alpha-value>)',
+        haze: 'rgb(var(--haze) / <alpha-value>)',
+        faint: 'rgb(var(--faint) / <alpha-value>)',
+        amber: 'rgb(var(--amber) / <alpha-value>)',
+        signal: 'rgb(var(--signal) / <alpha-value>)',
+        line: 'rgb(var(--chalk) / 0.12)',
+        lineStrong: 'rgb(var(--chalk) / 0.24)',
       },
       fontFamily: {
-        sans: ['DM Sans', 'Inter', 'system-ui', 'sans-serif'],
+        display: ['Anybody', 'Anybody Fallback', 'system-ui', 'sans-serif'],
+        sans: ['Instrument Sans', 'Instrument Fallback', 'system-ui', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
+      // A classic typographic scale (12 14 17 21 24 36 48 72 …), with the
+      // display steps fluid so the name fills a phone and a 27" screen alike.
       fontSize: {
-        display: ['clamp(3rem, 13vw, 12rem)', { lineHeight: '0.9', letterSpacing: '-0.045em' }],
-        statement: ['clamp(1.75rem, 4.4vw, 4rem)', { lineHeight: '1.08', letterSpacing: '-0.035em' }],
-        title: ['clamp(1.6rem, 3.4vw, 3rem)', { lineHeight: '1.05', letterSpacing: '-0.03em' }],
-        project: ['clamp(1.6rem, 4vw, 3.5rem)', { lineHeight: '1', letterSpacing: '-0.035em' }],
-        lede: ['clamp(1rem, 1.1vw + 0.7rem, 1.25rem)', { lineHeight: '1.55' }],
-        micro: ['0.6875rem', { lineHeight: '1.2', letterSpacing: '0.14em' }],
+        xs: ['0.75rem', { lineHeight: '1.4' }],
+        sm: ['0.875rem', { lineHeight: '1.5' }],
+        base: ['1.0625rem', { lineHeight: '1.65' }],
+        lede: ['clamp(1.125rem, 0.9rem + 0.7vw, 1.3125rem)', { lineHeight: '1.55' }],
+        h3: ['1.5rem', { lineHeight: '1.2' }],
+        h2: ['clamp(2.25rem, 1.2rem + 3.6vw, 4.5rem)', { lineHeight: '0.98' }],
+        h1: ['clamp(2.75rem, 1.4rem + 5.2vw, 6.5rem)', { lineHeight: '0.94' }],
+        name: ['clamp(2.75rem, 0.4rem + 9.2vw, 9.5rem)', { lineHeight: '0.84' }],
       },
-      borderRadius: {
-        card: '20px',
-        pill: '999px',
-      },
-      maxWidth: { shell: '1500px' },
+      maxWidth: { shell: '90rem', measure: '38rem' },
       transitionTimingFunction: {
-        editorial: 'cubic-bezier(0.22, 1, 0.36, 1)',
+        out: 'cubic-bezier(0.16, 1, 0.3, 1)',
       },
     },
   },
