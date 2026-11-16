@@ -64,6 +64,14 @@ run `npm run assets:images`. See `assets-source/README.md`.
   into the case-study hero.
 - Everything spatial is off under `prefers-reduced-motion`.
 
+## Low-data mode
+
+`src/lib/device.js` flags a visitor as lite only when Save-Data is on or the
+connection is 2G. Lite mode never downloads three.js (the static CSS poster
+of the stack stays) and turns off backdrop blur, 3D tilt, scroll-driven
+reveals and the pinned work reel. Everyone else gets the full experience; on
+weaker hardware the 3D scene just lowers its particle count and pixel ratio.
+
 ## Performance and SEO
 
 - Prerendered HTML for every route, with per-page title, description,
