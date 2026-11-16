@@ -112,7 +112,6 @@ export default function StackStory() {
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-haze" data-intro style={{ '--d': '80ms' }}>
             <span>Full-stack software engineer in {SITE.location}</span>
             <span className="inline-flex items-center gap-2 rounded-full border border-line bg-night/60 px-3 py-1 text-chalk">
-              <span className="h-2 w-2 rounded-full bg-amber" aria-hidden="true" />
               {SITE.availability}
             </span>
           </p>

@@ -278,7 +278,6 @@
 --------------------------------------------------------------------------- */
 
 .glass {
-  position: relative;
   background:
     linear-gradient(135deg, rgb(255 255 255 / 0.16), rgb(255 255 255 / 0.03) 55%, rgb(255 255 255 / 0.09)),
     rgb(var(--night) / 0.5);
@@ -760,4 +759,45 @@ html.lenis body {
   .reel-item {
     width: min(42vw, 44rem, calc((100svh - 26rem) * 1.6));
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Lite mode (low-memory, few-core, Save-Data or slow connections; see
+   lib/device.js). Content and links are untouched; only effects go.
+--------------------------------------------------------------------------- */
+
+html[data-lite] .glass {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgb(var(--deep) / 0.96);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12), 0 8px 20px -10px rgb(0 0 0 / 0.7);
+}
+
+html[data-lite] .glass::before,
+html[data-lite] .tilt-glare {
+  display: none;
+}
+
+html[data-lite] .stack-poster__plate,
+html[data-lite] [data-intro],
+html[data-lite] [data-reveal],
+html[data-lite] .lens,
+html[data-lite] .menu-sheet,
+html[data-lite] .menu-item {
+  animation: none !important;
+  transition: none !important;
+}
+
+html[data-lite] .tilt {
+  transform: none !important;
+  will-change: auto;
+}
+
+html[data-lite] .media-zoom img {
+  transition: none;
+  transform: none !important;
+}
+
+html[data-lite] .scroll-progress {
+  display: none;
 }

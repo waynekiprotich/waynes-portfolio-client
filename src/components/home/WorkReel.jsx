@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isLowEnd } from '@/lib/device'
 import { Link } from '@/lib/router'
 import { PROJECTS } from '@/data/projects'
 import ProjectCard from '@/components/ProjectCard'
@@ -22,7 +23,7 @@ export default function WorkReel() {
 
   useEffect(() => {
     const mq = window.matchMedia(PIN_QUERY)
-    const update = () => setPinned(mq.matches)
+    const update = () => setPinned(mq.matches && !isLowEnd())
     update()
     mq.addEventListener('change', update)
     return () => mq.removeEventListener('change', update)

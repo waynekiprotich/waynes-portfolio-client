@@ -96,7 +96,7 @@ export default function Footer() {
         </div>
 
         <p className="mt-14 text-xs text-faint">
-          © {new Date().getFullYear()} {SITE.name}. Designed and built in Nairobi with React and three.js.
+          © {new Date().getFullYear()} {SITE.name}.
         </p>
       </div>
     </footer>

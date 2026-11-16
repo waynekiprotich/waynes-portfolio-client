@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { isLowEnd } from '@/lib/device'
 
 /**
  * Hosts the 3D stack. The CSS poster paints with the HTML and stays until the
@@ -6,8 +7,9 @@ import { useEffect, useRef, useState } from 'react'
  *
  * three.js (~130 kB gzipped) loads on the visitor's first interaction, or
  * once the page has been idle for a few seconds, so it never competes with
- * first paint or the first tap. Visitors without WebGL, or with Save-Data on,
- * keep the poster.
+ * first paint or the first tap. Visitors without WebGL, and low-end devices
+ * or slow connections (see lib/device.js), keep the static poster and never
+ * download three.js at all.
  */
 const IDLE_DELAY = 6500
 
@@ -27,7 +29,7 @@ export default function StackStage({ sceneRef, className = '' }) {
   useEffect(() => {
     const el = host.current
     if (!el) return
-    if (navigator.connection?.saveData || !canUseWebGL()) return
+    if (isLowEnd() || !canUseWebGL()) return
 
     let scene = null
     let cancelled = false
