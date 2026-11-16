@@ -1,4 +1,4 @@
-/** Single source for identity, links and figures shown across the site. */
+/** Identity, links and the copy shared across pages. */
 export const SITE = {
   name: 'Wayne Kiprotich',
   role: 'Full-Stack Software Engineer',
@@ -12,80 +12,91 @@ export const SITE = {
   instagram:
     'https://www.instagram.com/mr._.w.a.y.n.e?igsh=MWYzcnFzbXR4eXdyOA%3D%3D&utm_source=qr',
   cv: '/Wayne-Kiprotich-CV.pdf',
+  cvSize: '22 KB',
+  availability: 'Taking on new projects',
 }
 
-export const STATS = [
-  { value: '15+', label: 'Projects completed' },
-  { value: '20+', label: 'Technologies used' },
-  { value: '25+', label: 'APIs integrated' },
+/** Portrait image set (see scripts/images.mjs). */
+export const PORTRAIT = { name: 'portrait', widths: [480, 720, 1080], width: 1080, height: 1350 }
+
+/** Primary navigation. CV and the scoping wizard sit apart as actions. */
+export const NAV = [
+  { to: '/work', label: 'Work' },
+  { to: '/about', label: 'About' },
+  { to: '/services', label: 'Services' },
+  { to: '/journal', label: 'Journal' },
+  { to: '/contact', label: 'Contact' },
 ]
 
-export const CAPABILITIES = [
-  { group: 'Frontend', items: ['React', 'Next.js', 'Tailwind CSS'] },
-  { group: 'Backend', items: ['Python', 'Flask', 'Node.js'] },
-  { group: 'Data', items: ['PostgreSQL', 'SQLite'] },
-  { group: 'Cloud / DevOps', items: ['Docker', 'CI/CD', 'Vercel'] },
-  { group: 'Tools', items: ['Git', 'Linux', 'Figma'] },
+/**
+ * The three layers of a product, top to bottom. The hero's 3D stack is these
+ * three plates, and the scroll story under it walks through them in order.
+ */
+export const LAYERS = [
+  {
+    id: 'interface',
+    name: 'Interface',
+    title: 'What people see and touch',
+    body:
+      'Fast, accessible React interfaces that hold up on a mid-range phone and a slow network. Design handoffs from Figma built to the pixel, with motion that explains rather than decorates.',
+    tools: ['React', 'TypeScript', 'Vite', 'Tailwind CSS', 'Three.js', 'Figma'],
+  },
+  {
+    id: 'api',
+    name: 'API',
+    title: 'The rules in the middle',
+    body:
+      'REST APIs with validated input, JWT authentication and errors that say what went wrong. Route handlers stay thin; the business rules live in a service layer that can be tested on its own.',
+    tools: ['Python', 'Flask', 'Node.js', 'Express', 'Marshmallow', 'JWT'],
+  },
+  {
+    id: 'data',
+    name: 'Data',
+    title: 'Where the truth lives',
+    body:
+      'Schemas shaped around the queries they serve, caching where it pays, and the Ubuntu servers and containers that keep it all running after launch.',
+    tools: ['PostgreSQL', 'SQLAlchemy', 'Redis', 'SQLite', 'Docker', 'Ubuntu Server'],
+  },
 ]
 
 export const SERVICES = [
   {
-    number: '01',
-    title: 'Custom Website Development',
-    description:
-      'Tailored websites built from scratch to match your brand and business goals: no templates, no shortcuts.',
-    tags: ['React', 'Vite', 'Tailwind'],
+    title: 'Business websites',
+    body: 'Built from scratch around your brand and what your customers need to do, not a template with your logo on it.',
+    tags: ['React', 'SEO', 'Hosting'],
   },
   {
-    number: '02',
-    title: 'Full-Stack Applications',
-    description:
-      'End-to-end applications, from database design to deployment, built to scale with your business.',
+    title: 'Full-stack web applications',
+    body: 'Database, API and interface designed together, so the product works as one system and is ready to grow.',
     tags: ['React', 'Flask', 'PostgreSQL'],
   },
   {
-    number: '03',
-    title: 'E-commerce',
-    description:
-      'Online stores with secure checkout, product management, and M-Pesa and card payments that convert visitors into customers.',
-    tags: ['M-Pesa', 'Catalog', 'Checkout'],
+    title: 'E-commerce with M-Pesa',
+    body: 'Online stores with guest checkout and M-Pesa payments, so Kenyan customers can pay the way they already do.',
+    tags: ['M-Pesa', 'Checkout', 'Catalogue'],
   },
   {
-    number: '04',
-    title: 'API Development',
-    description:
-      'REST APIs with clear contracts, validated input and predictable error handling that other teams can build against.',
-    tags: ['REST', 'Auth', 'Rate limiting'],
+    title: 'APIs and integrations',
+    body: 'REST APIs with clear contracts and validated input, plus integrations with the payment, messaging and data services you rely on.',
+    tags: ['REST', 'Auth', 'Webhooks'],
   },
   {
-    number: '05',
-    title: 'Database Design',
-    description:
-      'Schemas designed around the queries they serve, with constraints that hold under concurrency rather than in code alone.',
-    tags: ['PostgreSQL', 'Migrations'],
+    title: 'Dashboards and data',
+    body: 'Live dashboards that make busy data readable, with every loading, empty and error state designed rather than left to chance.',
+    tags: ['Charts', 'Live data', 'Redis'],
   },
   {
-    number: '06',
-    title: 'Performance & SEO',
-    description:
-      'Faster load times and smoother interactions through code splitting, caching and image optimization, plus on-page SEO fundamentals.',
-    tags: ['Core Web Vitals', 'Caching'],
-  },
-  {
-    number: '07',
-    title: 'Website Maintenance',
-    description:
-      'Ongoing updates, bug fixes and monitoring so your site stays secure and reliable long after launch.',
-    tags: ['Monitoring', 'Updates'],
+    title: 'Performance, SEO and care',
+    body: 'Faster pages, better search visibility, and ongoing fixes and updates once your site is live.',
+    tags: ['Core Web Vitals', 'SEO', 'Maintenance'],
   },
 ]
 
+/** A real sequence, so it is numbered. */
 export const PROCESS = [
-  { number: '01', title: 'Discovery', description: 'Understand the problem, the users and the constraints before any code exists.' },
-  { number: '02', title: 'Planning', description: 'Scope, data model and milestones agreed up front so the build has a shape.' },
-  { number: '03', title: 'Design', description: 'Interface and interaction decisions made deliberately, not assembled from defaults.' },
-  { number: '04', title: 'Development', description: 'Built in vertical slices, each one shippable, reviewable and demonstrable.' },
-  { number: '05', title: 'Testing', description: 'Correctness under load and edge cases, checked against real devices and real data.' },
-  { number: '06', title: 'Deployment', description: 'Pipelines, environment configuration and a release that is repeatable.' },
-  { number: '07', title: 'Support', description: 'Monitoring, fixes and iteration after launch, when the real usage starts.' },
+  { title: 'Scope', body: 'You describe the project in the scoping form or on a call. I reply with questions, a plan and a quote.' },
+  { title: 'Design', body: 'Layouts and flows agreed before code, so there are no surprises in the build.' },
+  { title: 'Build', body: 'Built in working slices you can click through on a live preview link as it grows.' },
+  { title: 'Launch', body: 'Tested on real phones, deployed, and handed over with the access and notes you need.' },
+  { title: 'Support', body: 'Fixes, updates and new features after launch, when real usage starts to teach us things.' },
 ]

@@ -1,321 +1,464 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link } from '@/lib/router'
 import SEO from '@/components/SEO'
-import PageHeader from '@/components/PageHeader'
+import { breadcrumbs } from '@/lib/schema'
 import { SITE } from '@/data/site'
-import {
-  PROJECT_TYPES,
-  TIMELINES,
-  BUDGETS,
-  WIZARD_STEPS,
-  INITIAL_ESTIMATOR_DATA,
-} from '@/utils/estimatorConfig'
+import { PROJECT_TYPES, TIMELINES, BUDGETS, STEPS, EMPTY_BRIEF } from '@/data/scope'
+
+const DRAFT_KEY = 'wk:brief'
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_BRIEF = 20
+
+/** Returns { field: message } for the given step; empty when valid. */
+function validate(step, d) {
+  const e = {}
+  if (step === 0 && !d.projectType) e.projectType = 'Choose the option closest to your project.'
+  if (step === 1 && d.description.trim().length < MIN_BRIEF)
+    e.description = `Add a little more detail: at least ${MIN_BRIEF} characters.`
+  if (step === 2) {
+    if (!d.timeline) e.timeline = 'Choose a timeline.'
+    if (!d.budget) e.budget = 'Choose a budget range, or “Not sure yet”.'
+  }
+  if (step === 3) {
+    if (!d.name.trim()) e.name = 'Enter your name.'
+    if (!EMAIL_RE.test(d.email.trim())) e.email = 'Enter an email address like name@example.com.'
+  }
+  return e
+}
+
+function RadioGroup({ name, legend, options, value, onChange, error, columns = 'sm:grid-cols-2' }) {
+  const errorId = `${name}-error`
+  return (
+    <fieldset aria-describedby={error ? errorId : undefined}>
+      <legend className="field-label text-base">{legend}</legend>
+      <div className={`mt-3 grid gap-3 ${columns}`}>
+        {options.map((option) => (
+          <label key={option} className="choice relative">
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              checked={value === option}
+              onChange={() => onChange(option)}
+              aria-invalid={error ? 'true' : undefined}
+            />
+            <span>{option}</span>
+          </label>
+        ))}
+      </div>
+      {error && (
+        <p id={errorId} className="field-error">
+          {error}
+        </p>
+      )}
+    </fieldset>
+  )
+}
+
+function TextField({ id, label, hint, error, optional, ...props }) {
+  const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ') || undefined
+  const Tag = props.rows ? 'textarea' : 'input'
+  return (
+    <div>
+      <label htmlFor={id} className="field-label">
+        {label}
+        {optional ? <span className="font-normal text-faint"> (optional)</span> : null}
+      </label>
+      <Tag
+        id={id}
+        name={id}
+        className="input"
+        aria-invalid={error ? 'true' : undefined}
+        aria-describedby={describedBy}
+        {...props}
+      />
+      {hint && (
+        <span id={`${id}-hint`} className="field-hint">
+          {hint}
+        </span>
+      )}
+      {error && (
+        <span id={`${id}-error`} className="field-error">
+          {error}
+        </span>
+      )}
+    </div>
+  )
+}
 
 /**
- * Scoping tool. Everything lives in local state until "Send brief", which
- * posts to /api/estimate (a Vercel function that forwards it to Discord). If
- * that fails, the visitor can still send the same brief by email.
+ * Project scoping wizard. Four short steps, easiest first. Answers are kept
+ * as a draft on this device until the brief is sent, which posts to
+ * /api/estimate (a serverless function that forwards it privately). If
+ * sending fails, the same brief can go by email in one click.
  */
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
 export default function Estimator() {
-  const [step, setStep] = useState(1)
-  const [data, setData] = useState(INITIAL_ESTIMATOR_DATA)
+  const [step, setStep] = useState(0)
+  // A draft from an earlier visit, if this device kept one.
+  const [data, setData] = useState(() => {
+    try {
+      const saved = typeof window !== 'undefined' && JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null')
+      return saved && typeof saved === 'object' ? { ...EMPTY_BRIEF, ...saved } : EMPTY_BRIEF
+    } catch {
+      return EMPTY_BRIEF
+    }
+  })
+  const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle') // idle | sending | sent | error
-  const [errorText, setErrorText] = useState('')
+  const [serverError, setServerError] = useState('')
   const [honeypot, setHoneypot] = useState('')
+  const heading = useRef(null)
+  const form = useRef(null)
+  const moved = useRef(false)
 
-  const set = (patch) => setData((d) => ({ ...d, ...patch }))
-  const setContact = (patch) => setData((d) => ({ ...d, contact: { ...d.contact, ...patch } }))
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(data))
+    } catch {
+      /* Private mode: the draft simply is not kept. */
+    }
+  }, [data])
 
-  const complete = useMemo(
-    () => ({
-      1: Boolean(data.contact.fullName.trim() && EMAIL_RE.test(data.contact.email.trim())),
-      2: Boolean(data.projectType && data.description.trim()),
-      3: Boolean(data.timeline && data.budget),
-    }),
+  // Each new step announces itself by moving focus to its heading.
+  useEffect(() => {
+    if (!moved.current) return
+    heading.current?.focus()
+  }, [step, status])
+
+  const set = (field) => (value) => {
+    setData((d) => ({ ...d, [field]: value }))
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }))
+  }
+
+  const go = (next) => {
+    moved.current = true
+    setErrors({})
+    setStep(next)
+  }
+
+  const summary = useMemo(
+    () =>
+      [
+        ['Project type', data.projectType],
+        ['Brief', data.description.trim()],
+        ['Timeline', data.timeline],
+        ['Budget', data.budget],
+        ['Name', data.name.trim()],
+        ['Email', data.email.trim()],
+        ['Phone', data.phone.trim()],
+      ].filter(([, v]) => v),
     [data]
   )
 
-  const summary = useMemo(() => {
-    const type = PROJECT_TYPES.find((t) => t.id === data.projectType)?.label
-    const timeline = TIMELINES.find((t) => t.id === data.timeline)?.label
-    return [
-      ['Name', data.contact.fullName],
-      ['Email', data.contact.email],
-      ['Phone', data.contact.phone],
-      ['Project type', type],
-      ['Timeline', timeline],
-      ['Budget', data.budget],
-      ['Brief', data.description],
-    ].filter(([, v]) => v)
-  }, [data])
+  const mailto = `mailto:${SITE.email}?subject=${encodeURIComponent(
+    `Project brief: ${data.projectType || 'new project'}`
+  )}&body=${encodeURIComponent(summary.map(([k, v]) => `${k}: ${v}`).join('\n'))}`
 
-  const mailto = useMemo(() => {
-    const body = summary.map(([label, value]) => `${label}: ${value}`).join('\n')
-    return `mailto:${SITE.email}?subject=${encodeURIComponent(
-      'Project enquiry: ' + (data.contact.fullName || 'New enquiry')
-    )}&body=${encodeURIComponent(body)}`
-  }, [summary, data.contact.fullName])
-
-  const allDone = complete[1] && complete[2] && complete[3]
-
-  const sendBrief = async () => {
-    if (!allDone || status === 'sending') return
+  const send = async () => {
     setStatus('sending')
-    setErrorText('')
+    setServerError('')
     try {
       const response = await fetch('/api/estimate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: data.contact.fullName.trim(),
-          email: data.contact.email.trim(),
-          phone: data.contact.phone.trim(),
-          projectType: PROJECT_TYPES.find((t) => t.id === data.projectType)?.label,
-          timeline: TIMELINES.find((t) => t.id === data.timeline)?.label,
-          budget: String(data.budget),
+          name: data.name.trim(),
+          email: data.email.trim(),
+          phone: data.phone.trim(),
+          projectType: data.projectType,
+          timeline: data.timeline,
+          budget: data.budget,
           description: data.description.trim(),
           company: honeypot,
         }),
       })
       if (response.ok) {
+        moved.current = true
         setStatus('sent')
+        try {
+          localStorage.removeItem(DRAFT_KEY)
+        } catch {
+          /* nothing to clear */
+        }
         return
       }
       const body = await response.json().catch(() => ({}))
-      setErrorText(body.error || '')
+      setServerError(body.error || `The server answered ${response.status}.`)
       setStatus('error')
     } catch {
-      setErrorText('Network error.')
+      setServerError('Your browser could not reach the server. Check your connection.')
       setStatus('error')
     }
+  }
+
+  const onSubmit = (event) => {
+    event.preventDefault()
+    const found = validate(step, data)
+    if (Object.keys(found).length) {
+      setErrors(found)
+      // Move focus to the first field with a problem.
+      const first = Object.keys(found)[0]
+      requestAnimationFrame(() => form.current?.querySelector(`[name="${first}"]`)?.focus())
+      return
+    }
+    if (step < STEPS.length - 1) go(step + 1)
+    else if (status !== 'sending') send()
+  }
+
+  const startOver = () => {
+    setData(EMPTY_BRIEF)
+    setStatus('idle')
+    go(0)
   }
 
   return (
     <>
       <SEO
-        title="Website Project Estimator"
-        description="Scope a website or web app project in Kenya: project type, timeline and budget in KES, sent straight to Wayne Kiprotich."
-        path="/estimator"
-      />
-
-      <PageHeader
-        eyebrow="Estimator"
         title="Scope a project"
-        lede="Three short steps. Nothing is sent until you press Send brief, and you can review everything in the summary first."
+        description="Scope a website or web app project with Wayne Kiprotich in four short steps: project type, brief, timeline and budget in KES, and your details."
+        path="/estimator"
+        schema={breadcrumbs([['Scope a project', '/estimator']])}
       />
 
-      <section className="shell py-14 sm:py-20" aria-label="Project estimator">
-        <div className="shell-inner grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-16">
+      <div className="shell pb-24 pt-32 sm:pt-40">
+        <p className="kicker" data-intro style={{ '--d': '40ms' }}>
+          Scope a project
+        </p>
+        <h1 className="display mt-4 max-w-[16ch] text-h1">Tell me what you want to build</h1>
+        <p className="mt-6 max-w-measure text-lede text-haze" data-intro style={{ '--d': '120ms' }}>
+          Four short steps, about three minutes. Nothing is sent until you press Send brief, and
+          your answers are saved on this device as you go.
+        </p>
+
+        <div className="mt-14 grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:gap-16">
           <div>
-            {/* Step rail */}
-            <ol className="flex flex-wrap gap-px overflow-hidden rounded-card border border-line bg-line" aria-label="Steps">
-              {WIZARD_STEPS.map(({ id, title, eyebrow }) => (
-                <li key={id} className="flex-1">
-                  <button
-                    type="button"
-                    onClick={() => setStep(id)}
-                    aria-current={step === id ? 'step' : undefined}
-                    className={`flex w-full flex-col gap-1 px-4 py-3 text-left transition-colors duration-150 ${
-                      step === id ? 'bg-ink text-bone' : 'bg-ivory text-muted hover:text-ink'
-                    }`}
-                  >
-                    <span className="text-[11px] uppercase tracking-[0.16em] opacity-70">
-                      {eyebrow}
-                    </span>
-                    <span className="text-[14px]">{title}</span>
+            {/* Progress */}
+            <nav aria-label="Progress">
+              <ol className="grid grid-cols-4 gap-2">
+                {STEPS.map(({ id, title }, i) => {
+                  const state = status === 'sent' || i < step ? 'done' : i === step ? 'current' : 'todo'
+                  return (
+                    <li key={id} aria-current={state === 'current' ? 'step' : undefined}>
+                      <span
+                        className={`block h-1 rounded-full transition-colors duration-500 ${
+                          state === 'todo' ? 'bg-lineStrong' : 'bg-amber'
+                        }`}
+                        aria-hidden="true"
+                      />
+                      <span className={`mt-3 hidden text-sm sm:block ${state === 'current' ? 'text-chalk' : 'text-faint'}`}>
+                        {title}
+                      </span>
+                      <span className="sr-only">
+                        {`Step ${i + 1}: ${title}${state === 'done' ? ' (completed)' : ''}`}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ol>
+            </nav>
+            <div className="sr-only" aria-live="polite">
+              {status === 'sent' ? 'Brief sent.' : `Step ${step + 1} of ${STEPS.length}`}
+            </div>
+
+            {status === 'sent' ? (
+              <div className="mt-12">
+                <h2 ref={heading} tabIndex={-1} className="display text-h2 focus:outline-none">
+                  Brief sent
+                </h2>
+                <p className="mt-4 max-w-measure text-lede text-haze">
+                  Thanks{data.name ? `, ${data.name.trim().split(' ')[0]}` : ''}. I’ll read it and
+                  reply to {data.email.trim() || 'your email'} with questions and next steps.
+                </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link to="/work" className="btn btn-amber">
+                    See the work meanwhile
+                  </Link>
+                  <button type="button" onClick={startOver} className="btn btn-line">
+                    Scope another project
                   </button>
-                </li>
-              ))}
-            </ol>
+                </div>
+              </div>
+            ) : (
+              <form ref={form} noValidate onSubmit={onSubmit} className="mt-12" aria-labelledby="step-title">
+                <h2
+                  id="step-title"
+                  ref={heading}
+                  tabIndex={-1}
+                  className="display text-h3 focus:outline-none sm:text-[2rem]"
+                >
+                  {
+                    [
+                      'What are you building?',
+                      'Describe the project',
+                      'When, and roughly for how much?',
+                      'Where should I reply?',
+                    ][step]
+                  }
+                </h2>
 
-            <div className="mt-10">
-              {step === 1 && (
-                <fieldset className="space-y-6">
-                  <legend className="eyebrow">Who is asking</legend>
-                  <Field
-                    label="Full name"
-                    value={data.contact.fullName}
-                    onChange={(v) => setContact({ fullName: v })}
-                    required
-                  />
-                  <Field
-                    label="Email"
-                    type="email"
-                    value={data.contact.email}
-                    onChange={(v) => setContact({ email: v })}
-                    required
-                  />
-                  <Field
-                    label="Phone (optional)"
-                    type="tel"
-                    value={data.contact.phone}
-                    onChange={(v) => setContact({ phone: v })}
-                  />
-                </fieldset>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-8">
-                  <Choice
-                    legend="Project type"
-                    options={PROJECT_TYPES}
-                    value={data.projectType}
-                    onChange={(v) => set({ projectType: v })}
-                  />
-                  <div>
-                    <label htmlFor="brief" className="eyebrow">Brief</label>
-                    <textarea
-                      id="brief"
-                      rows={6}
-                      value={data.description}
-                      onChange={(e) => set({ description: e.target.value })}
-                      placeholder="What should it do, and who has to use it?"
-                      // 16px, not 15: iOS Safari auto-zooms the viewport on
-                      // focusing any input under 16px, which then has to be
-                      // manually zoomed back out.
-                      className="mt-3 w-full rounded-[14px] border border-line bg-ivory px-4 py-3
-                                 text-base text-ink placeholder:text-faint
-                                 focus:border-lineStrong focus:outline-none"
+                <div className="mt-8 space-y-8">
+                  {step === 0 && (
+                    <RadioGroup
+                      name="projectType"
+                      legend="Project type"
+                      options={PROJECT_TYPES}
+                      value={data.projectType}
+                      onChange={set('projectType')}
+                      error={errors.projectType}
+                      columns="grid-cols-1 sm:grid-cols-2 xl:grid-cols-3"
                     />
+                  )}
+
+                  {step === 1 && (
+                    <TextField
+                      id="description"
+                      label="Your brief"
+                      rows={7}
+                      value={data.description}
+                      onChange={(e) => set('description')(e.target.value)}
+                      maxLength={3000}
+                      required
+                      enterKeyHint="next"
+                      hint="Who is it for, what should people be able to do, and any sites you like. Rough notes are fine."
+                      error={errors.description}
+                    />
+                  )}
+
+                  {step === 2 && (
+                    <>
+                      <RadioGroup
+                        name="timeline"
+                        legend="Timeline"
+                        options={TIMELINES}
+                        value={data.timeline}
+                        onChange={set('timeline')}
+                        error={errors.timeline}
+                      />
+                      <RadioGroup
+                        name="budget"
+                        legend="Budget"
+                        options={BUDGETS}
+                        value={data.budget}
+                        onChange={set('budget')}
+                        error={errors.budget}
+                      />
+                    </>
+                  )}
+
+                  {step === 3 && (
+                    <>
+                      <TextField
+                        id="name"
+                        label="Your name"
+                        autoComplete="name"
+                        value={data.name}
+                        onChange={(e) => set('name')(e.target.value)}
+                        maxLength={100}
+                        required
+                        enterKeyHint="next"
+                        error={errors.name}
+                      />
+                      <TextField
+                        id="email"
+                        label="Email"
+                        type="email"
+                        autoComplete="email"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck="false"
+                        value={data.email}
+                        onChange={(e) => set('email')(e.target.value)}
+                        maxLength={200}
+                        required
+                        enterKeyHint="next"
+                        error={errors.email}
+                      />
+                      <TextField
+                        id="phone"
+                        label="Phone or WhatsApp"
+                        type="tel"
+                        autoComplete="tel"
+                        value={data.phone}
+                        onChange={(e) => set('phone')(e.target.value)}
+                        maxLength={40}
+                        optional
+                        enterKeyHint="done"
+                      />
+                      {/* Honeypot: hidden from people and assistive tech. */}
+                      <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                        <label htmlFor="company">Company</label>
+                        <input
+                          id="company"
+                          name="company"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          value={honeypot}
+                          onChange={(e) => setHoneypot(e.target.value)}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {status === 'error' && (
+                  <div role="alert" className="mt-8 rounded-xl border border-amber/60 bg-amber/10 p-5">
+                    <p className="font-semibold text-chalk">The brief was not sent.</p>
+                    <p className="mt-1 text-haze">{serverError}</p>
+                    <p className="mt-3">
+                      <a href={mailto} className="link">
+                        Send the same brief by email instead
+                      </a>
+                    </p>
                   </div>
+                )}
+
+                <div className="mt-10 flex flex-wrap items-center gap-3">
+                  {step > 0 && (
+                    <button type="button" onClick={() => go(step - 1)} className="btn btn-line">
+                      Back
+                    </button>
+                  )}
+                  <button type="submit" className="btn btn-amber" disabled={status === 'sending'}>
+                    {step < STEPS.length - 1 ? 'Continue' : status === 'sending' ? 'Sending…' : 'Send brief'}
+                  </button>
+                  <span className="text-sm text-faint">
+                    Step {step + 1} of {STEPS.length}
+                  </span>
                 </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-8">
-                  <Choice
-                    legend="Timeline"
-                    options={TIMELINES}
-                    value={data.timeline}
-                    onChange={(v) => set({ timeline: v })}
-                  />
-                  <Choice
-                    legend="Budget range"
-                    options={BUDGETS.map((b) => ({ id: b, label: b }))}
-                    value={data.budget}
-                    onChange={(v) => set({ budget: v })}
-                  />
-                </div>
-              )}
-            </div>
-
-            <div className="mt-10 flex flex-wrap items-center gap-3 border-t border-line pt-6">
-              <button
-                type="button"
-                className="btn btn-ghost disabled:opacity-40"
-                onClick={() => setStep((s) => Math.max(1, s - 1))}
-                disabled={step === 1}
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost disabled:opacity-40"
-                onClick={() => setStep((s) => Math.min(WIZARD_STEPS.length, s + 1))}
-                disabled={step === WIZARD_STEPS.length}
-              >
-                Next
-              </button>
-              <button
-                type="button"
-                onClick={sendBrief}
-                disabled={!allDone || status === 'sending' || status === 'sent'}
-                className="btn btn-solid disabled:opacity-40"
-              >
-                {status === 'sending' ? 'Sending…' : status === 'sent' ? 'Brief sent' : 'Send brief'}
-              </button>
-              {/* Honeypot for bots; hidden from people and assistive tech. */}
-              <input
-                type="text"
-                name="company"
-                value={honeypot}
-                onChange={(e) => setHoneypot(e.target.value)}
-                tabIndex={-1}
-                autoComplete="off"
-                aria-hidden="true"
-                className="hidden"
-              />
-            </div>
-
-            <p className="mt-4 min-h-[1.5em] text-[14px] text-muted" role="status" aria-live="polite">
-              {status === 'sent' && 'Thanks, your brief is in. I will reply by email.'}
-              {status === 'error' && (
-                <>
-                  That did not go through{errorText ? ` (${errorText})` : ''}.{' '}
-                  <a href={mailto} className="underline underline-offset-4 hover:text-ink">
-                    Send it by email instead
-                  </a>
-                  .
-                </>
-              )}
-            </p>
+              </form>
+            )}
           </div>
 
-          {/* Live summary */}
-          <aside className="lg:sticky lg:top-24 lg:self-start" aria-label="Brief summary">
-            <p className="eyebrow">Your brief</p>
-            <dl className="mt-5 border-t border-line">
-              {summary.length === 0 && (
-                <p className="py-4 text-[14px] text-faint">Nothing filled in yet.</p>
-              )}
-              {summary.map(([label, value]) => (
-                <div key={label} className="border-b border-line py-3">
-                  <dt className="text-[11px] uppercase tracking-[0.16em] text-faint">{label}</dt>
-                  <dd className="mt-1 text-[14px] leading-relaxed text-ink/85">{value}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-6 text-[13px] leading-relaxed text-faint">
-              A firm figure follows discovery. This step is about scope, not a quote.
+          <aside aria-labelledby="summary-title" className="h-fit rounded-[1.25rem] border border-line bg-deep p-6 lg:sticky lg:top-28">
+            <h2 id="summary-title" className="font-semibold text-chalk">
+              Your brief so far
+            </h2>
+            {summary.length ? (
+              <dl className="mt-5 space-y-4 text-sm">
+                {summary.map(([k, v]) => (
+                  <div key={k}>
+                    <dt className="text-faint">{k}</dt>
+                    <dd className="mt-0.5 line-clamp-4 whitespace-pre-line break-words text-chalk">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : (
+              <p className="mt-4 text-sm text-haze">Your answers appear here as you go.</p>
+            )}
+            {summary.length > 0 && status !== 'sent' && (
+              <button type="button" onClick={startOver} className="mt-6 text-sm text-haze underline underline-offset-4 hover:text-chalk">
+                Clear answers
+              </button>
+            )}
+            <p className="mt-6 border-t border-line pt-5 text-sm text-haze">
+              Prefer email?{' '}
+              <a href={`mailto:${SITE.email}`} className="link">
+                {SITE.email}
+              </a>
             </p>
           </aside>
         </div>
-      </section>
-    </>
-  )
-}
-
-function Field({ label, value, onChange, type = 'text', required = false }) {
-  const id = label.toLowerCase().replace(/[^a-z]+/g, '-')
-  return (
-    <div>
-      <label htmlFor={id} className="eyebrow">{label}</label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        required={required}
-        onChange={(e) => onChange(e.target.value)}
-        // 16px, not 15 — see the textarea above for why.
-        className="mt-3 w-full rounded-[14px] border border-line bg-ivory px-4 py-3 text-base
-                   text-ink placeholder:text-faint focus:border-lineStrong focus:outline-none"
-      />
-    </div>
-  )
-}
-
-function Choice({ legend, options, value, onChange }) {
-  return (
-    <fieldset>
-      <legend className="eyebrow">{legend}</legend>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {options.map(({ id, label }) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => onChange(id)}
-            aria-pressed={value === id}
-            className={`min-h-11 rounded-pill border px-4 py-2.5 text-[13px] transition-colors duration-150 sm:min-h-0 ${
-              value === id
-                ? 'border-ink bg-ink text-bone'
-                : 'border-line text-muted hover:border-lineStrong hover:text-ink'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
       </div>
-    </fieldset>
+    </>
   )
 }

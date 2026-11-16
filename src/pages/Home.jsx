@@ -1,28 +1,39 @@
 import SEO from '@/components/SEO'
-import Hero from '@/components/Hero'
-import Statement from '@/components/Statement'
-import SelectedWork from '@/components/work/SelectedWork'
-import Capabilities from '@/components/Capabilities'
-import Services from '@/components/Services'
-import Process from '@/components/Process'
-import AboutPreview from '@/components/AboutPreview'
-import JournalPreview from '@/components/JournalPreview'
-import ContactCTA from '@/components/ContactCTA'
+import StackStory from '@/components/home/StackStory'
+import WorkReel from '@/components/home/WorkReel'
+import AboutBand from '@/components/home/AboutBand'
+import { ServiceList, ProcessSteps } from '@/components/ServiceList'
+import { Link } from '@/lib/router'
 
 export default function Home() {
   return (
     <>
-      {/* Person, business and website structured data is static in index.html. */}
+      {/* Person and WebSite structured data are static in index.html. */}
       <SEO />
-      <Hero />
-      <Statement />
-      <SelectedWork />
-      <Capabilities />
-      <Services limit={4} />
-      <Process />
-      <AboutPreview />
-      <JournalPreview />
-      <ContactCTA />
+      <StackStory />
+      <WorkReel />
+      <AboutBand />
+
+      <section aria-labelledby="services-title" className="shell py-24 sm:py-32">
+        <div className="flex flex-wrap items-end justify-between gap-6">
+          <h2 id="services-title" className="display max-w-[14ch] text-h2" data-reveal="mask">
+            What I can build for you
+          </h2>
+          <Link to="/services" className="btn btn-line">
+            Services in detail
+          </Link>
+        </div>
+        <div className="mt-12">
+          <ServiceList />
+        </div>
+
+        <h2 className="display mt-24 text-h3 sm:text-[2rem]" data-reveal>
+          How a project runs
+        </h2>
+        <div className="mt-8">
+          <ProcessSteps />
+        </div>
+      </section>
     </>
   )
 }

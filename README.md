@@ -1,71 +1,77 @@
 # Wayne Kiprotich — Portfolio
 
-Frontend-only portfolio. No backend, no database, no CMS: every piece of
-content is a local data file.
+Portfolio and CV of a full-stack software engineer in Nairobi. Every page is
+prerendered to static HTML, then a small React app takes over for the 3D
+scene, motion and page transitions.
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm run build
+npm run build      # vite build + prerender every route, 404.html, sitemap.xml
+npm run preview
 npm run lint
 ```
 
 ## Stack
 
-React 18 · Vite · Tailwind CSS · React Router · GSAP (ScrollTrigger) ·
-Lenis · react-helmet-async. Nothing else — a four-line helper beats a package.
+React 18, Vite, Tailwind CSS 3, three.js (lazy, plain, no React renderer),
+Lenis (desktop smooth scroll, lazy), react-helmet-async. Routing is ~150 lines
+of local code in `src/lib/router.jsx`. There is one serverless function,
+`api/estimate.js`, which forwards briefs from the scoping form to Discord.
+
+## Design
+
+- **Palette** comes from the CV (black, grey and gold) so the PDF and the site read
+  as one identity. Tokens live in `src/styles/index.css` (`--night`, `--deep`,
+  `--raised`, `--chalk`, `--haze`, `--faint`, `--amber`, `--signal`) and are
+  mapped to Tailwind colours in `tailwind.config.js`. Contrast ratios for each
+  text colour are noted next to the tokens; keep them at WCAG AA or better.
+- **Type**: Anybody for display (one wide, heavy instance cut from the
+  variable font, 8 kB), Instrument Sans for text. Both are self-hosted, subset
+  (`npm run assets:fonts`) and preloaded.
+- **The stack motif**: interface, API and data as three plates. It is the
+  logo (`StackMark`), the 3D hero (`src/three/StackScene.js`), the scroll story
+  under it, and the legend on each project card showing which layers a project
+  involved.
 
 ## Where content lives
 
 | File | Holds |
 | --- | --- |
-| `src/data/site.js` | Identity, contact links, stats, services, process, capabilities |
-| `src/data/projects.json` | Catalogue entry per project (title, category, tech, links, image) |
-| `src/data/caseStudies.js` | Long-form write-up per project, joined to the catalogue on `id` |
+| `src/data/site.js` | Identity, links, navigation, the three layers, services, process |
+| `src/data/cv.js` | The CV: profile, experience, projects, skills, education. Mirrors `public/Wayne-Kiprotich-CV.pdf`, update both together |
+| `src/data/projects.js` | Every project and its case study |
 | `src/data/blog.json` | Journal entries |
-| `src/data/work.js` | Joins the two project files; sets the homepage feature order |
+| `src/data/scope.js` | Options for the scoping form |
 
-Five of the six case studies still contain `[PLACEHOLDER]` copy carried over
-from the previous site. The marker is stripped before display and those pages
-carry a visible "write-up in progress" note (`isDraft` in `src/data/work.js`),
-rather than presenting draft text as finished. Replace the copy and the note
-disappears on its own.
-
-## Project imagery
-
-Screenshots live in `public/projects/`, referenced by `previewImage`. A project
-without one renders a typographic placeholder at the same aspect ratio, so a
-real screenshot drops in without touching the layout.
-
-## Theme
-
-Light and dark share one set of semantic tokens (`--c-bone`, `--c-ivory`,
-`--c-sand`, `--c-ink`, `--c-muted`, `--c-faint`, `--c-sky`, `--c-line-rgb`) in
-`src/styles/index.css`; dark mode swaps the variables, so no component carries
-a `dark:` class of its own. `--c-muted`/`--c-faint` are tuned to clear WCAG AA
-(4.5:1) against both `bone` and `ivory` in both themes — check that with any
-further palette change, since it's a tighter constraint than it looks.
-
-Resolution order: an explicit choice (the toggle in `NavDock`, via
-`src/theme/`) beats the OS preference, which is the fallback for no-JS
-clients via a `prefers-color-scheme` media block. A blocking inline script in
-`index.html` applies the resolved theme before first paint — no flash — and
-keeps `#theme-color-meta` in sync for the browser-chrome tint. The favicon
-also has its own light/dark PNG pair, swapped via `media` on the `<link>`
-tags, independent of the site's own toggle (it follows the browser/OS, since
-a browser tab can't see our app state).
+Images: put originals in `assets-source/`, list them in `scripts/images.mjs`,
+run `npm run assets:images`. See `assets-source/README.md`.
 
 ## Motion
 
-Split deliberately, by what happens when the animation *doesn't* run:
+- **Hero name**: letters lean toward the pointer in 3D (transform only, so it
+  never causes layout shift).
+- **3D stack**: loads on the first interaction or after a few idle seconds,
+  never on the critical path. A CSS poster of the same stack shows until then,
+  and stays for visitors without WebGL or with Save-Data on. With reduced
+  motion the scene renders without idle movement.
+- **Scroll**: the stack separates and lights each layer as the story scrolls;
+  the work reel pins and turns its cards in 3D on wide screens. Section
+  reveals are CSS scroll-driven animations (progressive enhancement; content
+  is never hidden waiting for them), and they move text without fading it, so
+  contrast never drops.
+- **Page transitions** use the View Transitions API; a project image morphs
+  into the case-study hero.
+- Everything spatial is off under `prefers-reduced-motion`.
 
-- **Page intros and scroll reveals are CSS**, triggered by mount and by
-  `IntersectionObserver` (`src/hooks/useReveal.js`). Content must never depend
-  on an animation frame to become visible — a throttled ticker would otherwise
-  leave the page blank.
-- **GSAP/ScrollTrigger drives only the scrubbed effects** — hero parallax and
-  the process rail. If they never run, the page is simply static.
-- The preloader has a 5s failsafe, since it covers the whole site.
-- Everything is skipped under `prefers-reduced-motion`. Lenis is skipped there
-  too, and on coarse pointers, which leaves native mobile momentum and
-  back/forward scroll restoration untouched.
+## Performance and SEO
+
+- Prerendered HTML for every route, with per-page title, description,
+  canonical, Open Graph and JSON-LD (Person, ProfessionalService, WebSite,
+  BreadcrumbList, CreativeWork, ProfilePage, Blog).
+- CSS is inlined into each page. The app bundle starts on the frame after
+  first paint (`assets/boot-*.js`), since the HTML is already complete.
+- `dist/404.html` is served with a real 404 status. Legacy URLs (`/projects`,
+  `/blog`) redirect permanently in `vercel.json`, which also sets the security
+  headers (CSP, HSTS, frame, referrer, permissions) and cache lifetimes.
+- `sitemap.xml` is generated at build time from the route list.
